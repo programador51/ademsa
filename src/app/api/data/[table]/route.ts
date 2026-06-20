@@ -39,7 +39,12 @@ export async function GET(
     request.nextUrl.searchParams.entries(),
   );
 
-  const data = await listRows(tableId, searchParams.filters);
+  const filters =
+  typeof searchParams.filters === "string"
+    ? JSON.parse(searchParams.filters)
+    : undefined;
+
+  const data = await listRows(tableId, filters);
   return NextResponse.json(data);
 }
 
