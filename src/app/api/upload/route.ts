@@ -20,5 +20,7 @@ export async function POST(request: NextRequest) {
 
   const data = await uploadFileServer(uploadData);
 
+  console.log(data);
+
   return NextResponse.json(data);
 }

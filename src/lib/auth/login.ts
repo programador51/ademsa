@@ -15,11 +15,11 @@ export async function findUserByEmail(email: string): Promise<Usuario | null> {
     filters: [
       {
         type: "equal",
-        field: FIELDS.USUARIOS.EMAIL,
+        field: FIELDS.USUARIOS.EMAIL.split("_")[1],
         value: email.trim().toLowerCase(),
       },
     ],
-  });
+  });  
 
   const { data } = await getServerClient().get<{ results: Usuario[] }>(
     `/api/database/rows/table/${TABLES.USUARIOS}/`,

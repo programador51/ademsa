@@ -79,7 +79,7 @@ export async function uploadFileServer(
   formData: FormData
 ): Promise<{ name: string; url: string }> {
   const { data } = await getServerClient().post<{ name: string; url: string }>(
-    "/api/user/files/upload/",
+    "/api/user-files/upload-file/",
     formData,
     { headers: { "Content-Type": "multipart/form-data" } }
   );

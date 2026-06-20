@@ -100,12 +100,7 @@ export default function CondominiosPage() {
             id: FIELDS.CONDOMINIOS.DIRECCION,
             label: "Dirección",
             render: (row) => row[FIELDS.CONDOMINIOS.DIRECCION] || "—",
-          },
-          {
-            id: FIELDS.CONDOMINIOS.USUARIOS,
-            label: "Usuarios",
-            render: (row) => getLinkLabel(row[FIELDS.CONDOMINIOS.USUARIOS]),
-          },
+          }          
         ]}
       />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardIcon from "@mui/icons-material/Dashboard";
+// import DashboardIcon from "@mui/icons-material/Dashboard";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import CategoryIcon from "@mui/icons-material/Category";
 import BuildIcon from "@mui/icons-material/Build";
@@ -9,7 +9,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const navItems = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: <DashboardIcon /> },
+  // { label: "Dashboard", href: "/admin/dashboard", icon: <DashboardIcon /> },
   { label: "Condominios", href: "/admin/condominios", icon: <ApartmentIcon /> },
   { label: "Servicios", href: "/admin/servicios", icon: <CategoryIcon /> },
   { label: "Mant. preventivos", href: "/admin/mantenimientos/preventivos", icon: <BuildIcon /> },

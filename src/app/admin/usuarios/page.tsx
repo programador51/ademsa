@@ -43,6 +43,7 @@ export default function UsuariosPage() {
   const [edificio, setEdificio] = useState("");
   const [indiviso, setIndiviso] = useState("");
   const [propietarioId, setPropietarioId] = useState<number | "">("");
+  const [unidadCondominioId, setUnidadCondominioId] = useState<number | "">("");
 
   const { data: usuarios } = useQuery({
     queryKey: ["usuarios-admin"],
@@ -81,6 +82,7 @@ export default function UsuariosPage() {
       setEdificio("");
       setIndiviso("");
       setPropietarioId("");
+      setUnidadCondominioId("");
       setEditingId(null);
     }
   }, [open, tab]);
@@ -106,19 +108,19 @@ export default function UsuariosPage() {
 
   const saveUnidadMutation = useMutation({
     mutationFn: async () => {
-      if (!condominioId) throw new Error("Condominio requerido");
+      if (!unidadCondominioId) throw new Error("Condominio requerido");
       const payload: Record<string, unknown> = {
         [FIELDS.UNIDADES.NUMERO]: numeroUnidad,
         [FIELDS.UNIDADES.EDIFICIO]: edificio,
         [FIELDS.UNIDADES.INDIVISO]: indiviso || null,
-        [FIELDS.UNIDADES.CONDOMINIO]: [condominioId],
+        [FIELDS.UNIDADES.CONDOMINIO]: [unidadCondominioId],
         ...(propietarioId ? { [FIELDS.UNIDADES.PROPIETARIO]: [propietarioId] } : {}),
       };
       if (editingId) return updateTableRow("unidades", editingId, payload);
       return createTableRow("unidades", payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["unidades", condominioId] });
+      queryClient.invalidateQueries({ queryKey: ["unidades"] });
       setOpen(false);
     },
   });
@@ -191,13 +193,18 @@ export default function UsuariosPage() {
         <CrudTable
           title="Unidades"
           rows={unidades?.results ?? []}
-          onCreate={() => setOpen(true)}
+          onCreate={() => {
+            setEditingId(null);
+            setUnidadCondominioId(condominioId ?? "");
+            setOpen(true);
+          }}
           onEdit={(row) => {
             setEditingId(row.id);
             setNumeroUnidad(row[FIELDS.UNIDADES.NUMERO]);
             setEdificio(row[FIELDS.UNIDADES.EDIFICIO]);
             setIndiviso(row[FIELDS.UNIDADES.INDIVISO] ?? "");
             setPropietarioId(row[FIELDS.UNIDADES.PROPIETARIO]?.[0]?.id ?? "");
+            setUnidadCondominioId(getLinkIds(row[FIELDS.UNIDADES.CONDOMINIO])[0] ?? "");
             setOpen(true);
           }}
           onDelete={(row) => deleteMutation.mutate(row)}
@@ -223,10 +230,10 @@ export default function UsuariosPage() {
               render: (row) => getLinkLabel(row[FIELDS.UNIDADES.PROPIETARIO]),
             },
             {
-              id:FIELDS.CONDOMINIOS.NOMBRE,
-              label:'Condominio',
-              render:(row)=>getLinkLabel(row[FIELDS.UNIDADES.CONDOMINIO])
-            }
+              id: FIELDS.UNIDADES.CONDOMINIO,
+              label: "Condominio",
+              render: (row) => getLinkLabel(row[FIELDS.UNIDADES.CONDOMINIO]),
+            },
           ]}
         />
       )}
@@ -285,6 +292,20 @@ export default function UsuariosPage() {
               </>
             ) : (
               <>
+                <TextField
+                  select
+                  label="Condominio"
+                  value={unidadCondominioId}
+                  onChange={(e) => setUnidadCondominioId(Number(e.target.value))}
+                  fullWidth
+                  required
+                >
+                  {condominios?.results.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>
+                      {c[FIELDS.CONDOMINIOS.NOMBRE] ?? `Condominio #${c.id}`}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField label="Número de unidad" value={numeroUnidad} onChange={(e) => setNumeroUnidad(e.target.value)} fullWidth required />
                 <TextField label="Edificio" value={edificio} onChange={(e) => setEdificio(e.target.value)} fullWidth required />
                 <TextField label="Indiviso %" type="number" value={indiviso} onChange={(e) => setIndiviso(e.target.value)} fullWidth />
@@ -295,7 +316,6 @@ export default function UsuariosPage() {
                     </MenuItem>
                   ))}
                 </TextField>
-                
               </>
             )}
           </Stack>
@@ -307,7 +327,7 @@ export default function UsuariosPage() {
             disabled={
               tab === "usuarios"
                 ? saveUsuarioMutation.isPending
-                : saveUnidadMutation.isPending
+                : saveUnidadMutation.isPending || !numeroUnidad || !edificio || !unidadCondominioId
             }
             onClick={() =>
               tab === "usuarios"
