@@ -41,7 +41,7 @@ const ReportesContext = createContext<ReportesContextValue | undefined>(
 
 export function ReportesProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const { condominioId } = useApp();
+  const { condominioId, user } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const filters = condominioId
@@ -93,8 +93,9 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
       return createTableRow<Reporte>("reportes", {
         [FIELDS.REPORTES.DESCRIPCION]: descripcion,
         [FIELDS.REPORTES.CONDOMINIO]: [condominioId],
+        ...(user?.id ? { [FIELDS.REPORTES.REPORTADO_POR]: user.id } : {}),
         ...(agrupadorId
-          ? { [FIELDS.REPORTES.AGRUPADORES]: [agrupadorId] }
+          ? { [FIELDS.REPORTES.AGRUPADORES]: agrupadorId }
           : {}),
         ...(uploaded.length
           ? {

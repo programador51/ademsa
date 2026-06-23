@@ -1,13 +1,13 @@
 "use client";
 
-import { Alert, Button, Stack } from "@mui/material";
+import { Alert, Button, MenuItem, Stack, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import MobileCardList from "@/components/common/MobileCardList";
 import ProyectoHierarchyFiltersBar from "@/components/filters/ProyectoHierarchyFiltersBar";
 import { useApp } from "@/contexts/AppContext";
 import { resolveProyectoHierarchy } from "@/lib/baserow/proyectoHierarchyUtils";
 import { formatDateTime, formatFolio, formatMoney } from "@/lib/formatters";
-import { FIELDS, ROLES } from "@/lib/baserow/constants";
+import { FIELDS, MANT_CORRECTIVO_ESTATUS, ROLES } from "@/lib/baserow/constants";
 import {
   MantenimientoCorrectivo,
   MantenimientoPreventivo,
@@ -27,6 +27,8 @@ export default function MantenimientosView() {
     deleteRow,
     hierarchyFilters,
     setHierarchyFilters,
+    correctivoFilters,
+    setCorrectivoFilters,
     tipos,
     agrupadores,
     proyectos,
@@ -37,7 +39,9 @@ export default function MantenimientosView() {
   }
 
   const resolveHierarchy = (
-    link: MantenimientoPreventivo[typeof FIELDS.MANT_PREVENTIVOS.PROYECTO]
+    link:
+      | MantenimientoPreventivo[typeof FIELDS.MANT_PREVENTIVOS.PROYECTO]
+      | MantenimientoCorrectivo[typeof FIELDS.MANT_CORRECTIVOS.PROYECTO]
   ) => resolveProyectoHierarchy(link, agrupadores, proyectos, tipos);
 
   const title =
@@ -116,7 +120,38 @@ export default function MantenimientosView() {
   }
 
   return (
-    <>
+    <Stack spacing={2}>
+      <ProyectoHierarchyFiltersBar
+        filters={correctivoFilters}
+        onChange={(hierarchy) =>
+          setCorrectivoFilters({ ...correctivoFilters, ...hierarchy })
+        }
+        tipos={tipos}
+        agrupadores={agrupadores}
+        proyectos={proyectos}
+        extraFilters={
+          <TextField
+            select
+            label="Estatus"
+            value={correctivoFilters.estatus}
+            onChange={(e) =>
+              setCorrectivoFilters({
+                ...correctivoFilters,
+                estatus: e.target.value,
+              })
+            }
+            fullWidth
+            size="small"
+          >
+            <MenuItem value="">Todos los estatus</MenuItem>
+            {Object.values(MANT_CORRECTIVO_ESTATUS).map((value) => (
+              <MenuItem key={value} value={value}>
+                {value}
+              </MenuItem>
+            ))}
+          </TextField>
+        }
+      />
       <MobileCardList<MantenimientoCorrectivo>
         title={title}
         rows={rows as MantenimientoCorrectivo[]}
@@ -142,34 +177,38 @@ export default function MantenimientosView() {
             id: "tipo",
             label: "Nivel 1 · Tipo",
             render: (row) =>
-              resolveProyectoHierarchy(
-                row[FIELDS.MANT_CORRECTIVOS.PROYECTO],
-                agrupadores,
-                proyectos,
-                tipos
-              ).tipoNombre,
+              resolveHierarchy(row[FIELDS.MANT_CORRECTIVOS.PROYECTO]).tipoNombre,
           },
           {
             id: "agrupador",
             label: "Nivel 2 · Agrupador",
             render: (row) =>
-              resolveProyectoHierarchy(
-                row[FIELDS.MANT_CORRECTIVOS.PROYECTO],
-                agrupadores,
-                proyectos,
-                tipos
-              ).agrupadorNombre,
+              resolveHierarchy(row[FIELDS.MANT_CORRECTIVOS.PROYECTO])
+                .agrupadorNombre,
           },
           {
             id: FIELDS.MANT_CORRECTIVOS.PROYECTO,
             label: "Nivel 3 · Proyecto",
             render: (row) =>
-              resolveProyectoHierarchy(
-                row[FIELDS.MANT_CORRECTIVOS.PROYECTO],
-                agrupadores,
-                proyectos,
-                tipos
-              ).proyectoNombre,
+              resolveHierarchy(row[FIELDS.MANT_CORRECTIVOS.PROYECTO])
+                .proyectoNombre,
+          },
+          {
+            id: FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE,
+            label: "Fecha reporte",
+            render: (row) =>
+              formatDateTime(row[FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE]),
+          },
+          {
+            id: FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION,
+            label: "Fecha corrección",
+            render: (row) =>
+              formatDateTime(row[FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]),
+          },
+          {
+            id: FIELDS.MANT_CORRECTIVOS.ESTATUS,
+            label: "Estatus",
+            render: (row) => row[FIELDS.MANT_CORRECTIVOS.ESTATUS] ?? "—",
           },
           {
             id: FIELDS.MANT_CORRECTIVOS.PRESUPUESTO,
@@ -185,6 +224,6 @@ export default function MantenimientosView() {
       />
       {error && <Alert severity="error">{error}</Alert>}
       <MantenimientoFormDialog />
-    </>
+    </Stack>
   );
 }

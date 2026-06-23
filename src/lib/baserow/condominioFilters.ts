@@ -37,7 +37,13 @@ export function proyectoIdsForCondominio(proyectos: Proyecto[]): number[] {
 }
 
 export function rowBelongsToProyectos(
-  proyectoLink: BaserowLinkRow[] | null | undefined,
+  proyectoLink:
+    | BaserowLinkRow
+    | BaserowLinkRow[]
+    | number
+    | number[]
+    | null
+    | undefined,
   proyectoIds: number[]
 ): boolean {
   if (!proyectoIds.length) return false;

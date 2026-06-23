@@ -11,7 +11,6 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { APP_LOGO_URL, APP_NAME } from "@/lib/appBrand";
@@ -41,12 +40,8 @@ export default function MobileShell({
   const { user } = useApp();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const activeIndex = navItems.findIndex((item) => pathname.startsWith(item.href));
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/me", { method: "DELETE" });
-    router.push("/login");
-  };
+  const homeItem = navItems[0];
+  const isHomeActive = homeItem ? pathname.startsWith(homeItem.href) : false;
 
   return (
     <Box
@@ -111,40 +106,39 @@ export default function MobileShell({
         {children}
       </Box>
 
-      <Paper
-        elevation={8}
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "100%",
-          maxWidth: 480,
-          borderTop: 1,
-          borderColor: "divider",
-        }}
-      >
-        <BottomNavigation
-          showLabels
-          value={activeIndex >= 0 ? activeIndex : false}
-          onChange={(_, index) => {
-            if (index === navItems.length) {
-              handleLogout();
-              return;
-            }
-            router.push(navItems[index].href);
+      {homeItem && (
+        <Paper
+          elevation={8}
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100%",
+            maxWidth: 480,
+            borderTop: 1,
+            borderColor: "divider",
           }}
         >
-          {navItems.map((item) => (
+          <BottomNavigation
+            showLabels
+            value={isHomeActive ? 0 : false}
+            sx={{
+              justifyContent: "center",
+              "& .MuiBottomNavigationAction-root": {
+                maxWidth: 160,
+                minWidth: 120,
+              },
+            }}
+          >
             <BottomNavigationAction
-              key={item.href}
-              label={item.label}
-              icon={item.icon}
+              label={homeItem.label}
+              icon={homeItem.icon}
+              onClick={() => router.push(homeItem.href)}
             />
-          ))}
-          <BottomNavigationAction label="Salir" icon={<LogoutIcon />} />
-        </BottomNavigation>
-      </Paper>
+          </BottomNavigation>
+        </Paper>
+      )}
     </Box>
   );
 }

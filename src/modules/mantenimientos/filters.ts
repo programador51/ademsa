@@ -3,11 +3,11 @@ import {
   ProyectoHierarchyFilters,
 } from "@/lib/baserow/proyectoHierarchyUtils";
 
-export interface InversionesFilters extends ProyectoHierarchyFilters {
+export interface MantCorrectivoFilters extends ProyectoHierarchyFilters {
   estatus: string;
 }
 
-export const defaultInversionesFilters: InversionesFilters = {
+export const defaultMantCorrectivoFilters: MantCorrectivoFilters = {
   ...defaultProyectoHierarchyFilters,
   estatus: "",
 };

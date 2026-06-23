@@ -29,6 +29,9 @@ export const FIELDS = {
     IMAGENES: "field_9103207",
     CONDOMINIO: "field_9103323",
     AGRUPADORES: "field_9103565",
+    REPORTADO_POR: "field_9143122",
+    ESTATUS: "field_9171145",
+    FECHA_CIERRE: "field_9171147",
   },
   TIPOS: {
     NOMBRE: "field_9103350",
@@ -64,6 +67,10 @@ export const FIELDS = {
     PRESUPUESTO: "field_9103529",
     EJERCIDO: "field_9103532",
     PROYECTO: "field_9103533",
+    FECHA_REPORTE: "field_9170647",
+    DESCRIPCION: "field_9170649",
+    FECHA_CORRECCION: "field_9170974",
+    ESTATUS: "field_9191196",
   },
   INVERSIONES: {
     FOLIO: "field_9103535",
@@ -72,7 +79,8 @@ export const FIELDS = {
     INGRESO: "field_9103538",
     EJERCIDO: "field_9103539",
     PROYECTO: "field_9103540",
-    ESTATUS: "field_9103542",
+    CONCLUIDO: "field_9191223",
+    ESTADO: "field_9191246",
   },
   UNIDADES: {
     NUMERO: "field_9123026",
@@ -93,19 +101,28 @@ export const ROLES = {
   RESIDENTE: 6546169,
 } as const;
 
-export const INVERSION_ESTATUS = {
-  PLANEADO: 6546394,
-  EN_PROCESO: 6546395,
-  TERMINADO: 6546396,
+export const INVERSION_ESTADO = {
+  PLANEADO: "Planeado",
+  EN_PROCESO: "En proceso",
+  TERMINADO: "Terminado",
 } as const;
+
+export const MANT_CORRECTIVO_ESTATUS = {
+  EN_FALLO: "En Fallo",
+  EN_OPERACION: "En operacion",
+} as const;
+
+export const REPORTE_ESTATUS = {
+  ABIERTA: 6594921,
+  CERRADA: 6594922,
+} as const;
+
+export const REPORTE_ESTATUS_LABELS: Record<number, string> = {
+  [REPORTE_ESTATUS.ABIERTA]: "Abierta",
+  [REPORTE_ESTATUS.CERRADA]: "Cerrada",
+};
 
 export const ROLE_LABELS: Record<number, string> = {
   [ROLES.ADMINISTRADOR]: "Administrador",
   [ROLES.RESIDENTE]: "Residente",
-};
-
-export const ESTATUS_LABELS: Record<number, string> = {
-  [INVERSION_ESTATUS.PLANEADO]: "Planeado",
-  [INVERSION_ESTATUS.EN_PROCESO]: "En proceso",
-  [INVERSION_ESTATUS.TERMINADO]: "Terminado",
 };

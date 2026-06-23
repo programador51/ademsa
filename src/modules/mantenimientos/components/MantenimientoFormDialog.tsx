@@ -13,14 +13,13 @@ import { useEffect } from "react";
 import { Resolver, useForm } from "react-hook-form";
 import { FormDatePicker } from "@/components/forms/FormDatePicker";
 import { FormMoneyField } from "@/components/forms/FormMoneyField";
-import { FormSelect } from "@/components/forms/FormSelect";
+import { FormTextField } from "@/components/forms/FormTextField";
 import { ProyectoHierarchyFields } from "@/components/forms/ProyectoHierarchyFields";
 import { useApp } from "@/contexts/AppContext";
 import {
   getHierarchyFromProyecto,
   useServiciosHierarchyData,
 } from "@/hooks/useServiciosHierarchyData";
-import { FIELDS } from "@/lib/baserow/constants";
 import {
   MantenimientoCorrectivo,
   MantenimientoPreventivo,
@@ -80,7 +79,13 @@ export default function MantenimientoFormDialog() {
         );
         preventivoForm.reset({ ...base, ...hierarchy });
       } else if (row) {
-        correctivoForm.reset(getCorrectivoEditValues(row as MantenimientoCorrectivo));
+        const base = getCorrectivoEditValues(row as MantenimientoCorrectivo);
+        const hierarchy = getHierarchyFromProyecto(
+          base.proyectoId,
+          agrupadores,
+          proyectos
+        );
+        correctivoForm.reset({ ...base, ...hierarchy });
       }
     } else {
       preventivoForm.reset(defaultMantPreventivoValues);
@@ -137,6 +142,16 @@ export default function MantenimientoFormDialog() {
         <form onSubmit={correctivoForm.handleSubmit((v) => saveCorrectivo(v))}>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
+              <FormDatePicker
+                name="fechaReporte"
+                control={correctivoForm.control}
+                label="Fecha reporte"
+              />
+              <FormDatePicker
+                name="fechaCorreccion"
+                control={correctivoForm.control}
+                label="Fecha corrección"
+              />
               <FormMoneyField
                 name="presupuesto"
                 control={correctivoForm.control}
@@ -147,15 +162,19 @@ export default function MantenimientoFormDialog() {
                 control={correctivoForm.control}
                 label="Ejercido"
               />
-              <FormSelect
-                name="proyectoId"
+              {editingId && (
+                <FormTextField
+                  name="descripcion"
+                  control={correctivoForm.control}
+                  label="Descripción del reporte"
+                  multiline
+                  minRows={3}
+                />
+              )}
+              <ProyectoHierarchyFields
                 control={correctivoForm.control}
-                label="Proyecto"
-                emptyOption="Ninguno"
-                options={proyectos.map((p) => ({
-                  value: p.id,
-                  label: p[FIELDS.PROYECTOS.NOMBRE],
-                }))}
+                watch={correctivoForm.watch}
+                setValue={correctivoForm.setValue}
               />
             </Stack>
           </DialogContent>

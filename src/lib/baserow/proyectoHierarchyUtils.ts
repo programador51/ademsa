@@ -2,6 +2,14 @@ import { FIELDS } from "./constants";
 import { Agrupador, BaserowLinkRow, Proyecto, Tipo } from "./types";
 import { getLinkIds, getLinkLabel } from "./utils";
 
+type ProyectoLinkValue =
+  | BaserowLinkRow
+  | BaserowLinkRow[]
+  | number
+  | number[]
+  | null
+  | undefined;
+
 export interface ProyectoHierarchyFilters {
   tipoId: number | "";
   agrupadorId: number | "";
@@ -24,7 +32,7 @@ export interface ProyectoHierarchyLabels {
 }
 
 export function resolveProyectoHierarchy(
-  proyectoLink: BaserowLinkRow[] | null | undefined,
+  proyectoLink: ProyectoLinkValue,
   agrupadores: Agrupador[],
   proyectos: Proyecto[],
   tipos: Tipo[]
@@ -56,7 +64,7 @@ export function resolveProyectoHierarchy(
 }
 
 export function rowMatchesHierarchyFilters(
-  proyectoLink: BaserowLinkRow[] | null | undefined,
+  proyectoLink: ProyectoLinkValue,
   filters: ProyectoHierarchyFilters,
   agrupadores: Agrupador[],
   proyectos: Proyecto[],

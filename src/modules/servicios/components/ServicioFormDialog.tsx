@@ -20,8 +20,15 @@ import {
   defaultServicioFormValues,
   servicioFormSchema,
   ServicioFormValues,
+  ServicioNivel,
 } from "../schemas";
 import { getEditFormValues, useServicios } from "../ServiciosContext";
+
+const NIVEL_OPTIONS: { value: ServicioNivel; label: string }[] = [
+  { value: 1, label: "Nivel 1 · Tipo" },
+  { value: 2, label: "Nivel 2 · Agrupador" },
+  { value: 3, label: "Nivel 3 · Proyecto" },
+];
 
 export default function ServicioFormDialog() {
   const {
@@ -33,7 +40,6 @@ export default function ServicioFormDialog() {
     isSaving,
     tipos,
     agrupadores,
-    agrupadoresFiltrados,
     filteredRows,
   } = useServicios();
 
@@ -45,6 +51,7 @@ export default function ServicioFormDialog() {
 
   const formNivel = watch("nivel");
   const formTipoId = watch("tipoId");
+  const isEditing = editingId !== null;
 
   useEffect(() => {
     if (formNivel === 3 && formTipoId) {
@@ -73,29 +80,40 @@ export default function ServicioFormDialog() {
             values.tipoId = getLinkIds(agrupador[FIELDS.AGRUPADORES.TIPO])[0];
           }
         }
-        reset(values);
+        reset({ ...values, nivel });
       }
     } else {
       reset({ ...defaultServicioFormValues, nivel });
     }
   }, [dialogOpen, editingId, nivel, filteredRows, agrupadores, reset]);
 
-  useEffect(() => {
-    setValue("nivel", nivel);
-  }, [nivel, setValue]);
-
   const onSubmit = handleSubmit(async (values) => {
-    await saveServicio({ ...values, nivel });
+    await saveServicio(values);
   });
+
+  const nivelLabel =
+    formNivel === 1
+      ? "Nivel 1 · Tipo"
+      : formNivel === 2
+        ? "Nivel 2 · Agrupador"
+        : "Nivel 3 · Proyecto";
 
   return (
     <Dialog open={dialogOpen} onClose={closeDialog} fullScreen>
       <DialogTitle>
-        {editingId ? "Editar" : "Nuevo"}{" "}
-        {nivel === 1 ? "Nivel 1 · Tipo" : nivel === 2 ? "Nivel 2 · Agrupador" : "Nivel 3 · Proyecto"}
+        {isEditing ? "Editar" : "Nuevo"} {isEditing ? nivelLabel : "servicio"}
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
+          {!isEditing && (
+            <FormSelect
+              name="nivel"
+              control={control}
+              label="Nivel a agregar"
+              options={NIVEL_OPTIONS}
+            />
+          )}
+
           <FormTextField
             name="nombre"
             control={control}

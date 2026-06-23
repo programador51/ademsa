@@ -7,13 +7,7 @@ import ProyectoHierarchyFiltersBar from "@/components/filters/ProyectoHierarchyF
 import { useApp } from "@/contexts/AppContext";
 import { resolveProyectoHierarchy } from "@/lib/baserow/proyectoHierarchyUtils";
 import { formatDateTime, formatFolio, formatMoney } from "@/lib/formatters";
-import {
-  ESTATUS_LABELS,
-  FIELDS,
-  INVERSION_ESTATUS,
-  ROLES,
-} from "@/lib/baserow/constants";
-import { getSelectId } from "@/lib/baserow/utils";
+import { FIELDS, INVERSION_ESTADO, ROLES } from "@/lib/baserow/constants";
 import { useInversiones } from "../InversionesContext";
 import InversionFormDialog from "./InversionFormDialog";
 
@@ -37,8 +31,9 @@ export default function InversionesView() {
     return <Alert severity="error">Acceso no autorizado</Alert>;
   }
 
-  const resolveHierarchy = (proyectoLink: (typeof rows)[0][typeof FIELDS.INVERSIONES.PROYECTO]) =>
-    resolveProyectoHierarchy(proyectoLink, agrupadores, proyectos, tipos);
+  const resolveHierarchy = (
+    proyectoLink: (typeof rows)[0][typeof FIELDS.INVERSIONES.PROYECTO]
+  ) => resolveProyectoHierarchy(proyectoLink, agrupadores, proyectos, tipos);
 
   return (
     <Stack spacing={2}>
@@ -51,21 +46,21 @@ export default function InversionesView() {
         extraFilters={
           <TextField
             select
-            label="Estatus"
+            label="Estado"
             value={filters.estatus}
             onChange={(e) =>
               setFilters({
                 ...filters,
-                estatus: e.target.value ? Number(e.target.value) : "",
+                estatus: e.target.value,
               })
             }
             fullWidth
             size="small"
           >
-            <MenuItem value="">Todos los estatus</MenuItem>
-            {Object.entries(INVERSION_ESTATUS).map(([, value]) => (
+            <MenuItem value="">Todos los estados</MenuItem>
+            {Object.values(INVERSION_ESTADO).map((value) => (
               <MenuItem key={value} value={value}>
-                {ESTATUS_LABELS[value]}
+                {value}
               </MenuItem>
             ))}
           </TextField>
@@ -132,12 +127,14 @@ export default function InversionesView() {
             render: (row) => formatMoney(row[FIELDS.INVERSIONES.EJERCIDO]),
           },
           {
-            id: FIELDS.INVERSIONES.ESTATUS,
-            label: "Estatus",
-            render: (row) => {
-              const id = getSelectId(row[FIELDS.INVERSIONES.ESTATUS]);
-              return id ? ESTATUS_LABELS[id] ?? "—" : "—";
-            },
+            id: FIELDS.INVERSIONES.CONCLUIDO,
+            label: "Concluido",
+            render: (row) => formatDateTime(row[FIELDS.INVERSIONES.CONCLUIDO]),
+          },
+          {
+            id: FIELDS.INVERSIONES.ESTADO,
+            label: "Estado",
+            render: (row) => row[FIELDS.INVERSIONES.ESTADO] ?? "—",
           },
         ]}
       />

@@ -48,7 +48,10 @@ export type Reporte = BaserowRow & {
   [FIELDS.REPORTES.FECHA_REPORTE]: string | null;
   [FIELDS.REPORTES.IMAGENES]: BaserowFile[];
   [FIELDS.REPORTES.CONDOMINIO]: BaserowLinkRow[];
-  [FIELDS.REPORTES.AGRUPADORES]: BaserowLinkRow[];
+  [FIELDS.REPORTES.AGRUPADORES]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.REPORTES.REPORTADO_POR]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.REPORTES.ESTATUS]: BaserowSelectOption | number | null;
+  [FIELDS.REPORTES.FECHA_CIERRE]: string | null;
 };
 
 export type Tipo = BaserowRow & {
@@ -85,7 +88,11 @@ export type MantenimientoCorrectivo = BaserowRow & {
   [FIELDS.MANT_CORRECTIVOS.FOLIO]: number;
   [FIELDS.MANT_CORRECTIVOS.PRESUPUESTO]: string | null;
   [FIELDS.MANT_CORRECTIVOS.EJERCIDO]: string | null;
-  [FIELDS.MANT_CORRECTIVOS.PROYECTO]: BaserowLinkRow[];
+  [FIELDS.MANT_CORRECTIVOS.PROYECTO]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE]: string | null;
+  [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: string | null;
+  [FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]: string | null;
+  [FIELDS.MANT_CORRECTIVOS.ESTATUS]: string | null;
 };
 
 export type Inversion = BaserowRow & {
@@ -94,8 +101,9 @@ export type Inversion = BaserowRow & {
   [FIELDS.INVERSIONES.PRESUPUESTO]: string | null;
   [FIELDS.INVERSIONES.INGRESO]: string | null;
   [FIELDS.INVERSIONES.EJERCIDO]: string | null;
-  [FIELDS.INVERSIONES.PROYECTO]: BaserowLinkRow[];
-  [FIELDS.INVERSIONES.ESTATUS]: BaserowSelectOption | number | null;
+  [FIELDS.INVERSIONES.PROYECTO]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.INVERSIONES.CONCLUIDO]: string | null;
+  [FIELDS.INVERSIONES.ESTADO]: string | null;
 };
 
 export type Unidad = BaserowRow & {

@@ -31,7 +31,7 @@ import {
   Proyecto,
   Tipo,
 } from "@/lib/baserow/types";
-import { getSelectId } from "@/lib/baserow/utils";
+import { getLinkIds } from "@/lib/baserow/utils";
 import {
   defaultInversionesFilters,
   InversionesFilters,
@@ -116,8 +116,8 @@ export function InversionesProvider({ children }: { children: ReactNode }) {
     );
 
     const filtered = all.filter((row) => {
-      const estatusId = getSelectId(row[FIELDS.INVERSIONES.ESTATUS]);
-      if (filters.estatus && estatusId !== Number(filters.estatus)) {
+      const estado = row[FIELDS.INVERSIONES.ESTADO] ?? "";
+      if (filters.estatus && estado !== filters.estatus) {
         return false;
       }
       return rowMatchesHierarchyFilters(
@@ -139,10 +139,9 @@ export function InversionesProvider({ children }: { children: ReactNode }) {
         [FIELDS.INVERSIONES.FECHA]: values.fecha || null,
         [FIELDS.INVERSIONES.PRESUPUESTO]: values.presupuesto || null,
         [FIELDS.INVERSIONES.INGRESO]: values.ingreso || null,
-        [FIELDS.INVERSIONES.EJERCIDO]: values.ejercido || null,
-        ...(values.estatus ? { [FIELDS.INVERSIONES.ESTATUS]: values.estatus } : {}),
+        [FIELDS.INVERSIONES.CONCLUIDO]: values.concluido || null,
         ...(values.proyectoId
-          ? { [FIELDS.INVERSIONES.PROYECTO]: [values.proyectoId] }
+          ? { [FIELDS.INVERSIONES.PROYECTO]: values.proyectoId }
           : {}),
       };
       if (editingId) await updateTableRow("inversiones", editingId, payload);
@@ -237,11 +236,10 @@ export function getInversionEditValues(row: Inversion): InversionFormValues {
     fecha: row[FIELDS.INVERSIONES.FECHA]?.slice(0, 10) ?? "",
     presupuesto: row[FIELDS.INVERSIONES.PRESUPUESTO] ?? "",
     ingreso: row[FIELDS.INVERSIONES.INGRESO] ?? "",
-    ejercido: row[FIELDS.INVERSIONES.EJERCIDO] ?? "",
-    estatus: getSelectId(row[FIELDS.INVERSIONES.ESTATUS]) ?? null,
+    concluido: row[FIELDS.INVERSIONES.CONCLUIDO]?.slice(0, 10) ?? "",
     tipoId: null,
     agrupadorId: null,
-    proyectoId: row[FIELDS.INVERSIONES.PROYECTO]?.[0]?.id ?? null,
+    proyectoId: getLinkIds(row[FIELDS.INVERSIONES.PROYECTO])[0] ?? null,
   };
 }
 

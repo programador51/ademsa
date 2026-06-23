@@ -24,6 +24,11 @@ export const mantPreventivoSchema = yup.object({
 export const mantCorrectivoSchema = yup.object({
   presupuesto: yup.string().default(""),
   ejercido: yup.string().default(""),
+  fechaReporte: yup.string().default(""),
+  fechaCorreccion: yup.string().default(""),
+  descripcion: yup.string().default(""),
+  tipoId: yup.number().nullable().default(null),
+  agrupadorId: yup.number().nullable().default(null),
   proyectoId: yup.number().nullable().default(null),
 });
 
@@ -41,5 +46,10 @@ export const defaultMantPreventivoValues: MantPreventivoFormValues = {
 export const defaultMantCorrectivoValues: MantCorrectivoFormValues = {
   presupuesto: "",
   ejercido: "",
+  fechaReporte: "",
+  fechaCorreccion: "",
+  descripcion: "",
+  tipoId: null,
+  agrupadorId: null,
   proyectoId: null,
 };

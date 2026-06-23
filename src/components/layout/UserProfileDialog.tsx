@@ -2,7 +2,9 @@
 
 import {
   Avatar,
+  Button,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
@@ -11,6 +13,8 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/contexts/AppContext";
 
 interface UserProfileDialogProps {
@@ -22,7 +26,14 @@ export default function UserProfileDialog({
   open,
   onClose,
 }: UserProfileDialogProps) {
+  const router = useRouter();
   const { user, condominioNombre } = useApp();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/me", { method: "DELETE" });
+    onClose();
+    router.push("/login");
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
@@ -52,6 +63,17 @@ export default function UserProfileDialog({
         </Typography>
         <Typography variant="body1">{user?.rolLabel ?? "—"}</Typography>
       </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button
+          fullWidth
+          variant="outlined"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={() => void handleLogout()}
+        >
+          Cerrar sesión
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

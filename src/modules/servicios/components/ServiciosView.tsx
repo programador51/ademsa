@@ -21,16 +21,9 @@ export default function ServiciosView() {
     deleteServicio,
   } = useServicios();
 
-  const headerAction = (
-    <Button size="small" startIcon={<AddIcon />} onClick={openCreate}>
-      Nuevo
-    </Button>
-  );
-
   const listProps = {
     loading: isLoading,
     onDelete: (row: { id: number }) => deleteServicio(row.id),
-    headerAction,
   };
 
   const deleteLabelByNivel =
@@ -42,9 +35,17 @@ export default function ServiciosView() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Servicios
-      </Typography>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: "space-between", alignItems: "center" }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          Servicios
+        </Typography>
+        <Button size="small" startIcon={<AddIcon />} onClick={openCreate}>
+          Nuevo
+        </Button>
+      </Stack>
 
       <Tabs
         value={nivel}

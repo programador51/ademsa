@@ -36,6 +36,11 @@ import {
   Proyecto,
   Tipo,
 } from "@/lib/baserow/types";
+import { getLinkIds } from "@/lib/baserow/utils";
+import {
+  defaultMantCorrectivoFilters,
+  MantCorrectivoFilters,
+} from "./filters";
 import {
   defaultMantCorrectivoValues,
   defaultMantPreventivoValues,
@@ -49,6 +54,8 @@ interface MantenimientosContextValue {
   rows: (MantenimientoPreventivo | MantenimientoCorrectivo)[];
   hierarchyFilters: ProyectoHierarchyFilters;
   setHierarchyFilters: (filters: ProyectoHierarchyFilters) => void;
+  correctivoFilters: MantCorrectivoFilters;
+  setCorrectivoFilters: (filters: MantCorrectivoFilters) => void;
   tipos: Tipo[];
   agrupadores: Agrupador[];
   proyectos: Proyecto[];
@@ -82,6 +89,9 @@ export function MantenimientosProvider({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [hierarchyFilters, setHierarchyFilters] = useState(
     defaultProyectoHierarchyFilters
+  );
+  const [correctivoFilters, setCorrectivoFilters] = useState(
+    defaultMantCorrectivoFilters
   );
 
   const { tipos, agrupadores, proyectos } =
@@ -132,14 +142,29 @@ export function MantenimientosProvider({
         )
       );
     }
-    return (all as MantenimientoCorrectivo[]).filter((row) =>
-      rowBelongsToProyectos(row[FIELDS.MANT_CORRECTIVOS.PROYECTO], proyectoIds)
-    );
+    return (all as MantenimientoCorrectivo[])
+      .filter((row) =>
+        rowBelongsToProyectos(row[FIELDS.MANT_CORRECTIVOS.PROYECTO], proyectoIds)
+      )
+      .filter((row) => {
+        const estatus = row[FIELDS.MANT_CORRECTIVOS.ESTATUS] ?? "";
+        if (correctivoFilters.estatus && estatus !== correctivoFilters.estatus) {
+          return false;
+        }
+        return rowMatchesHierarchyFilters(
+          row[FIELDS.MANT_CORRECTIVOS.PROYECTO],
+          correctivoFilters,
+          agrupadores,
+          proyectos,
+          tipos
+        );
+      });
   }, [
     data,
     proyectoIds,
     tipo,
     hierarchyFilters,
+    correctivoFilters,
     agrupadores,
     proyectos,
     tipos,
@@ -173,8 +198,15 @@ export function MantenimientosProvider({
       const payload = {
         [FIELDS.MANT_CORRECTIVOS.PRESUPUESTO]: values.presupuesto || null,
         [FIELDS.MANT_CORRECTIVOS.EJERCIDO]: values.ejercido || null,
+        [FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE]: values.fechaReporte || null,
+        [FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]: values.fechaCorreccion || null,
+        ...(editingId
+          ? { [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: values.descripcion || null }
+          : values.descripcion
+            ? { [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: values.descripcion }
+            : {}),
         ...(values.proyectoId
-          ? { [FIELDS.MANT_CORRECTIVOS.PROYECTO]: [values.proyectoId] }
+          ? { [FIELDS.MANT_CORRECTIVOS.PROYECTO]: values.proyectoId }
           : {}),
       };
       if (editingId) await updateTableRow("mant-correctivos", editingId, payload);
@@ -219,6 +251,8 @@ export function MantenimientosProvider({
       rows,
       hierarchyFilters,
       setHierarchyFilters,
+      correctivoFilters,
+      setCorrectivoFilters,
       tipos,
       agrupadores,
       proyectos,
@@ -242,6 +276,7 @@ export function MantenimientosProvider({
       tipo,
       rows,
       hierarchyFilters,
+      correctivoFilters,
       tipos,
       agrupadores,
       proyectos,
@@ -291,7 +326,13 @@ export function getCorrectivoEditValues(
   return {
     presupuesto: row[FIELDS.MANT_CORRECTIVOS.PRESUPUESTO] ?? "",
     ejercido: row[FIELDS.MANT_CORRECTIVOS.EJERCIDO] ?? "",
-    proyectoId: row[FIELDS.MANT_CORRECTIVOS.PROYECTO]?.[0]?.id ?? null,
+    fechaReporte: row[FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE]?.slice(0, 10) ?? "",
+    fechaCorreccion:
+      row[FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]?.slice(0, 10) ?? "",
+    descripcion: row[FIELDS.MANT_CORRECTIVOS.DESCRIPCION] ?? "",
+    tipoId: null,
+    agrupadorId: null,
+    proyectoId: getLinkIds(row[FIELDS.MANT_CORRECTIVOS.PROYECTO])[0] ?? null,
   };
 }
 

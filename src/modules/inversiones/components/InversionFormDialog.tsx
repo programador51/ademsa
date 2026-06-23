@@ -13,14 +13,12 @@ import { useEffect } from "react";
 import { Resolver, useForm } from "react-hook-form";
 import { FormDatePicker } from "@/components/forms/FormDatePicker";
 import { FormMoneyField } from "@/components/forms/FormMoneyField";
-import { FormSelect } from "@/components/forms/FormSelect";
 import { ProyectoHierarchyFields } from "@/components/forms/ProyectoHierarchyFields";
 import { useApp } from "@/contexts/AppContext";
 import {
   getHierarchyFromProyecto,
   useServiciosHierarchyData,
 } from "@/hooks/useServiciosHierarchyData";
-import { ESTATUS_LABELS, INVERSION_ESTATUS } from "@/lib/baserow/constants";
 import {
   defaultInversionFormValues,
   inversionFormSchema,
@@ -72,16 +70,10 @@ export default function InversionFormDialog() {
             <FormDatePicker name="fecha" control={control} label="Fecha" />
             <FormMoneyField name="presupuesto" control={control} label="Presupuesto" />
             <FormMoneyField name="ingreso" control={control} label="Ingreso recibido" />
-            <FormMoneyField name="ejercido" control={control} label="Ejercido" />
-            <FormSelect
-              name="estatus"
+            <FormDatePicker
+              name="concluido"
               control={control}
-              label="Estatus"
-              emptyOption="Ninguno"
-              options={Object.entries(INVERSION_ESTATUS).map(([, value]) => ({
-                value,
-                label: ESTATUS_LABELS[value],
-              }))}
+              label="Concluido (fecha estimada)"
             />
             <ProyectoHierarchyFields
               control={control}
