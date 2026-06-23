@@ -55,7 +55,7 @@ export type Tipo = BaserowRow & {
   [FIELDS.TIPOS.NOMBRE]: string;
   [FIELDS.TIPOS.CREADO]: string | null;
   [FIELDS.TIPOS.AGRUPADORES]: BaserowLinkRow[];
-  [FIELDS.TIPOS.CONDOMINIO]: BaserowLinkRow[];
+  [FIELDS.TIPOS.CONDOMINIO]: BaserowLinkRow | BaserowLinkRow[] | null;
 };
 
 export type Agrupador = BaserowRow & {

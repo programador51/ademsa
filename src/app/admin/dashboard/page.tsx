@@ -2,11 +2,9 @@
 
 import {
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
-  Grid,
   Stack,
   Typography,
 } from "@mui/material";
@@ -16,7 +14,7 @@ import { ROLES } from "@/lib/baserow/constants";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { user, condominioId } = useApp();
+  const { user, condominioId, condominioNombre } = useApp();
 
   if (user?.rol !== ROLES.ADMINISTRADOR) {
     return <Alert severity="error">Acceso no autorizado</Alert>;
@@ -32,47 +30,40 @@ export default function AdminDashboardPage() {
           </Button>
         }
       >
-        Selecciona un condominio para administrar
+        Selecciona un condominio
       </Alert>
     );
   }
 
-  const modules = [
-    { title: "Condominios", desc: "CRUD de condominios", href: "/admin/condominios" },
-    { title: "Servicios", desc: "Tipos, agrupadores y proyectos", href: "/admin/servicios" },
-    { title: "Mantenimientos", desc: "Preventivos y correctivos", href: "/admin/mantenimientos/preventivos" },
-    { title: "Inversiones", desc: "Control de inversiones", href: "/admin/inversiones" },
-    { title: "Usuarios", desc: "Asignación de unidades", href: "/admin/usuarios" },
+  const links = [
+    { title: "Condominios", href: "/admin/condominios" },
+    { title: "Servicios", href: "/admin/servicios" },
+    { title: "Mant. preventivos", href: "/admin/mantenimientos/preventivos" },
+    { title: "Mant. correctivos", href: "/admin/mantenimientos/correctivos" },
+    { title: "Inversiones", href: "/admin/inversiones" },
+    { title: "Usuarios y unidades", href: "/admin/usuarios" },
   ];
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Panel de administración
-        </Typography>
-        <Typography color="text.secondary">
-          Condominio activo: #{condominioId}
-        </Typography>
-      </Box>
-
-      <Grid container spacing={2}>
-        {modules.map((module) => (
-          <Grid key={module.href} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">{module.title}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {module.desc}
-                </Typography>
-                <Button variant="contained" onClick={() => router.push(module.href)}>
-                  Administrar
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+    <Stack spacing={2}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        Panel admin
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {condominioNombre ?? `Condominio #${condominioId}`}
+      </Typography>
+      {links.map((link) => (
+        <Card key={link.href} variant="outlined">
+          <CardContent>
+            <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
+              <Typography>{link.title}</Typography>
+              <Button size="small" onClick={() => router.push(link.href)}>
+                Abrir
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+      ))}
     </Stack>
   );
 }

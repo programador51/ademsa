@@ -15,11 +15,13 @@ export async function findUserByEmail(email: string): Promise<Usuario | null> {
     filters: [
       {
         type: "equal",
-        field: FIELDS.USUARIOS.EMAIL.split("_")[1],
+        field: FIELDS.USUARIOS.EMAIL.split('_')[1],
         value: email.trim().toLowerCase(),
       },
     ],
-  });  
+  });
+
+  
 
   const { data } = await getServerClient().get<{ results: Usuario[] }>(
     `/api/database/rows/table/${TABLES.USUARIOS}/`,
@@ -72,7 +74,13 @@ export async function authenticateUser(
   const user = await findUserByEmail(email);
   if (!user) return null;
 
-  const valid = await verifyUserPassword(user.id, password);
+  const trimmedPassword = password.trim();
+
+  if (!trimmedPassword) {
+    return mapUsuarioToSession(user);
+  }
+
+  const valid = await verifyUserPassword(user.id, trimmedPassword);
   if (!valid) return null;
 
   return mapUsuarioToSession(user);

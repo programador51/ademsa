@@ -3,12 +3,12 @@
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ReportIcon from "@mui/icons-material/Report";
 import PersonIcon from "@mui/icons-material/Person";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import MobileShell from "@/components/layout/MobileShell";
 
 const navItems = [
-  { label: "Dashboard", href: "/residente/dashboard", icon: <DashboardIcon /> },
+  { label: "Inicio", href: "/residente/dashboard", icon: <DashboardIcon /> },
   { label: "Reportes", href: "/residente/reportes", icon: <ReportIcon /> },
-  { label: "Mi perfil", href: "/residente/perfil", icon: <PersonIcon /> },
+  { label: "Perfil", href: "/residente/perfil", icon: <PersonIcon /> },
 ];
 
 export default function ResidenteLayout({
@@ -17,8 +17,8 @@ export default function ResidenteLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardLayout title="Portal Residente" navItems={navItems}>
+    <MobileShell title="Portal Residente" navItems={navItems}>
       {children}
-    </DashboardLayout>
+    </MobileShell>
   );
 }

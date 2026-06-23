@@ -12,19 +12,37 @@ export function getSelectId(
   return value.id;
 }
 
-export function getLinkIds(
-  value: { id: number; value: string }[] | number[] | null | undefined
-): number[] {
-  if (!value?.length) return [];
-  if (typeof value[0] === "number") return value as number[];
-  return (value as { id: number; value: string }[]).map((item) => item.id);
+type BaserowLinkValue =
+  | { id: number; value: string }
+  | { id: number; value: string }[]
+  | number
+  | number[]
+  | null
+  | undefined;
+
+function normalizeLinkRows(
+  value: BaserowLinkValue
+): { id: number; value: string }[] {
+  if (value == null) return [];
+  if (Array.isArray(value)) {
+    if (!value.length) return [];
+    if (typeof value[0] === "number") {
+      return (value as number[]).map((id) => ({ id, value: "" }));
+    }
+    return value as { id: number; value: string }[];
+  }
+  if (typeof value === "number") return [{ id: value, value: "" }];
+  return [value];
 }
 
-export function getLinkLabel(
-  value: { id: number; value: string }[] | null | undefined
-): string {
-  if (!value?.length) return "—";
-  return value.map((item) => item.value).join(", ");
+export function getLinkIds(value: BaserowLinkValue): number[] {
+  return normalizeLinkRows(value).map((item) => item.id);
+}
+
+export function getLinkLabel(value: BaserowLinkValue): string {
+  const rows = normalizeLinkRows(value);
+  if (!rows.length) return "—";
+  return rows.map((item) => item.value).join(", ");
 }
 
 export function buildFieldFilter(
@@ -34,7 +52,13 @@ export function buildFieldFilter(
 ) {
   return JSON.stringify({
     filter_type: "AND",
-    filters: [{ type, field, value }],
+    filters: [
+      {
+        type,
+        field: fieldId(field),
+        value: String(value),
+      },
+    ],
   });
 }
 

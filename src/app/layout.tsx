@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import ThemeRegistry from "@/providers/ThemeRegistry";
 import QueryProvider from "@/providers/QueryProvider";
+import DateLocalizationProvider from "@/providers/DateLocalizationProvider";
 import { AppProvider } from "@/contexts/AppContext";
+import { APP_LOGO_URL } from "@/lib/appBrand";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ademsa.programmer51.com"),
+  icons: {
+    icon: APP_LOGO_URL,
+    apple: APP_LOGO_URL,
+  },
 
   title: {
     default: "Portal de Residentes | Ademsa Monterrey",
@@ -73,9 +79,11 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <ThemeRegistry>
-          <QueryProvider>
-            <AppProvider>{children}</AppProvider>
-          </QueryProvider>
+          <DateLocalizationProvider>
+            <QueryProvider>
+              <AppProvider>{children}</AppProvider>
+            </QueryProvider>
+          </DateLocalizationProvider>
         </ThemeRegistry>
       </body>
     </html>

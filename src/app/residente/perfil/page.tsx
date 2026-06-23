@@ -9,21 +9,34 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { FormTextField } from "@/components/forms/FormTextField";
+import { ThemeModeSelect } from "@/components/layout/ThemeModeToggle";
 import { useApp } from "@/contexts/AppContext";
 import { fetchRow, updateTableRow } from "@/lib/api/data";
 import { FIELDS, ROLES } from "@/lib/baserow/constants";
 import { Unidad, Usuario } from "@/lib/baserow/types";
 import { getLinkLabel } from "@/lib/baserow/utils";
 
+const perfilSchema = yup.object({
+  nombre: yup.string().trim().required("El nombre es requerido"),
+});
+
+type PerfilFormValues = yup.InferType<typeof perfilSchema>;
+
 export default function PerfilPage() {
   const router = useRouter();
   const { user, refreshUser } = useApp();
-  const [nombre, setNombre] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
+  const { control, handleSubmit, reset } = useForm<PerfilFormValues>({
+    resolver: yupResolver(perfilSchema),
+    defaultValues: { nombre: "" },
+  });
 
   const { data: perfil } = useQuery({
     queryKey: ["perfil", user?.id],
@@ -33,32 +46,23 @@ export default function PerfilPage() {
 
   const { data: unidades } = useQuery({
     queryKey: ["mis-unidades", user?.unidadIds],
-    queryFn: async () => {
-      const results = await Promise.all(
-        user!.unidadIds.map((id) => fetchRow<Unidad>("unidades", id))
-      );
-      return results;
-    },
+    queryFn: async () =>
+      Promise.all(user!.unidadIds.map((id) => fetchRow<Unidad>("unidades", id))),
     enabled: !!user?.unidadIds.length,
   });
 
   useEffect(() => {
-    if (perfil) {
-      setNombre(perfil[FIELDS.USUARIOS.NOMBRE]);
-    }
-  }, [perfil]);
+    if (perfil) reset({ nombre: perfil[FIELDS.USUARIOS.NOMBRE] });
+  }, [perfil, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (values: PerfilFormValues) =>
       updateTableRow<Usuario>("usuarios", user!.id, {
-        [FIELDS.USUARIOS.NOMBRE]: nombre,
+        [FIELDS.USUARIOS.NOMBRE]: values.nombre,
       }),
     onSuccess: async () => {
-      setMessage("Perfil actualizado correctamente");
-      setError(null);
       await refreshUser();
     },
-    onError: () => setError("No se pudo actualizar el perfil"),
   });
 
   if (user?.rol !== ROLES.RESIDENTE) {
@@ -66,40 +70,20 @@ export default function PerfilPage() {
   }
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 640 }}>
-      <Typography variant="h4" sx={{ fontWeight: 700 }}>
+    <Stack spacing={2}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
         Mi perfil
       </Typography>
 
-      {message && <Alert severity="success">{message}</Alert>}
-      {error && <Alert severity="error">{error}</Alert>}
-
-      <Card>
+      <Card variant="outlined">
         <CardContent>
-          <Stack spacing={2}>
-            <TextField
-              label="Nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Email"
-              value={user?.email ?? ""}
-              disabled
-              fullWidth
-            />
-            <TextField
-              label="Rol"
-              value={user?.rolLabel ?? ""}
-              disabled
-              fullWidth
-            />
-            <Button
-              variant="contained"
-              onClick={() => updateMutation.mutate()}
-              disabled={updateMutation.isPending || !nombre}
-            >
+          <Stack spacing={2} component="form" onSubmit={handleSubmit((v) => updateMutation.mutate(v))}>
+            <FormTextField name="nombre" control={control} label="Nombre" />
+            <TextField label="Email" value={user?.email ?? ""} disabled fullWidth />
+            <Typography variant="body2" color="text.secondary">
+              Rol: {user?.rolLabel}
+            </Typography>
+            <Button type="submit" variant="contained" disabled={updateMutation.isPending}>
               Guardar cambios
             </Button>
             <Button variant="text" onClick={() => router.push("/select-condominio")}>
@@ -109,27 +93,25 @@ export default function PerfilPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card variant="outlined">
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
             Mis unidades
           </Typography>
           {!user?.unidadIds.length ? (
-            <Typography color="text.secondary">
-              No tienes unidades asignadas.
-            </Typography>
+            <Typography color="text.secondary">No tienes unidades asignadas.</Typography>
           ) : (
-            <Stack spacing={1}>
-              {unidades?.map((unidad) => (
-                <Typography key={unidad.id}>
-                  {unidad[FIELDS.UNIDADES.NUMERO]} · Edificio {unidad[FIELDS.UNIDADES.EDIFICIO]} ·{" "}
-                  {getLinkLabel(unidad[FIELDS.UNIDADES.CONDOMINIO])}
-                </Typography>
-              ))}
-            </Stack>
+            unidades?.map((unidad) => (
+              <Typography key={unidad.id} variant="body2" sx={{ mb: 1 }}>
+                {unidad[FIELDS.UNIDADES.NUMERO]} · {unidad[FIELDS.UNIDADES.EDIFICIO]} ·{" "}
+                {getLinkLabel(unidad[FIELDS.UNIDADES.CONDOMINIO])}
+              </Typography>
+            ))
           )}
         </CardContent>
       </Card>
+
+      <ThemeModeSelect />
     </Stack>
   );
 }
