@@ -15,6 +15,7 @@ import BuildIcon from "@mui/icons-material/Build";
 import ImageIcon from "@mui/icons-material/Image";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import ProyectoHierarchyFiltersBar from "@/components/filters/ProyectoHierarchyFiltersBar";
 import { useApp } from "@/contexts/AppContext";
 import { formatDateTime } from "@/lib/formatters";
 import {
@@ -26,6 +27,7 @@ import {
 import { BaserowFile, Reporte } from "@/lib/baserow/types";
 import { getLinkLabel, getSelectId } from "@/lib/baserow/utils";
 import Swal from "sweetalert2";
+import { resolveReporteHierarchy } from "../filters";
 import {
   isReporteCerrado,
   useAdminReportes,
@@ -35,6 +37,11 @@ export default function AdminReportesView() {
   const { user } = useApp();
   const {
     reportes,
+    filters,
+    setFilters,
+    tipos,
+    agrupadores,
+    proyectos,
     isLoading,
     updateReporte,
     createCorrectivoFromReporte,
@@ -84,6 +91,60 @@ export default function AdminReportesView() {
         Reportes de residentes
       </Typography>
 
+      <ProyectoHierarchyFiltersBar
+        filters={filters}
+        onChange={(hierarchy) => setFilters({ ...filters, ...hierarchy })}
+        tipos={tipos}
+        agrupadores={agrupadores}
+        proyectos={proyectos}
+        extraFilters={
+          <Stack spacing={1.5}>
+            <TextField
+              select
+              label="Estatus"
+              value={filters.estatus}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  estatus: e.target.value ? Number(e.target.value) : "",
+                })
+              }
+              fullWidth
+              size="small"
+            >
+              <MenuItem value="">Todos los estatus</MenuItem>
+              {Object.entries(REPORTE_ESTATUS_LABELS).map(([id, label]) => (
+                <MenuItem key={id} value={Number(id)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <DatePicker
+              label="Fecha reporte desde"
+              value={filters.fechaDesde ? dayjs(filters.fechaDesde) : null}
+              onChange={(date) =>
+                setFilters({
+                  ...filters,
+                  fechaDesde: date ? date.format("YYYY-MM-DD") : "",
+                })
+              }
+              slotProps={{ textField: { fullWidth: true, size: "small" } }}
+            />
+            <DatePicker
+              label="Fecha reporte hasta"
+              value={filters.fechaHasta ? dayjs(filters.fechaHasta) : null}
+              onChange={(date) =>
+                setFilters({
+                  ...filters,
+                  fechaHasta: date ? date.format("YYYY-MM-DD") : "",
+                })
+              }
+              slotProps={{ textField: { fullWidth: true, size: "small" } }}
+            />
+          </Stack>
+        }
+      />
+
       {isLoading ? (
         <Typography color="text.secondary">Cargando...</Typography>
       ) : reportes.length === 0 ? (
@@ -93,6 +154,12 @@ export default function AdminReportesView() {
           const estatusId = getSelectId(reporte[FIELDS.REPORTES.ESTATUS]);
           const cerrado = isReporteCerrado(reporte);
           const imagenes = reporte[FIELDS.REPORTES.IMAGENES] ?? [];
+          const hierarchy = resolveReporteHierarchy(
+            reporte,
+            agrupadores,
+            proyectos,
+            tipos
+          );
 
           return (
             <Card key={reporte.id} variant="outlined">
@@ -113,11 +180,25 @@ export default function AdminReportesView() {
 
                   <Box>
                     <Typography variant="caption" color="text.secondary">
-                      Agrupador
+                      Nivel 1 · Tipo
+                    </Typography>
+                    <Typography variant="body2">{hierarchy.tipoNombre}</Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Nivel 2 · Agrupador
                     </Typography>
                     <Typography variant="body2">
-                      {getLinkLabel(reporte[FIELDS.REPORTES.AGRUPADORES])}
+                      {hierarchy.agrupadorNombre}
                     </Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Nivel 3 · Proyecto
+                    </Typography>
+                    <Typography variant="body2">{hierarchy.proyectoNombre}</Typography>
                   </Box>
 
                   <Box>

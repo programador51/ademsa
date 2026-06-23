@@ -9,29 +9,27 @@ import {
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
+import { useServiciosHierarchyData } from "@/hooks/useServiciosHierarchyData";
 import {
   buildCondominioFilter,
   createTableRow,
   fetchTable,
   uploadFile,
 } from "@/lib/api/data";
-import { agrupadoresForTipos } from "@/lib/baserow/condominioFilters";
+import { rowBelongsToCondominio } from "@/lib/baserow/condominioFilters";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS } from "@/lib/baserow/constants";
-import { Agrupador, Reporte, Tipo } from "@/lib/baserow/types";
+import { Reporte } from "@/lib/baserow/types";
+import { getLinkIds } from "@/lib/baserow/utils";
+import { ReporteFormValues } from "./schemas";
 
 interface ReportesContextValue {
   reportes: Reporte[];
-  agrupadores: Agrupador[];
   isLoading: boolean;
   dialogOpen: boolean;
   openDialog: () => void;
   closeDialog: () => void;
-  createReporte: (input: {
-    descripcion: string;
-    agrupadorId?: number;
-    files: File[];
-  }) => Promise<void>;
+  createReporte: (input: ReporteFormValues & { files: File[] }) => Promise<void>;
   isCreating: boolean;
 }
 
@@ -48,9 +46,7 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
     ? buildCondominioFilter(condominioId, FIELDS.REPORTES.CONDOMINIO)
     : undefined;
 
-  const tipoFilter = condominioId
-    ? buildCondominioFilter(condominioId, FIELDS.TIPOS.CONDOMINIO)
-    : undefined;
+  const { proyectos } = useServiciosHierarchyData(condominioId);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reportes", condominioId],
@@ -59,44 +55,35 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
     enabled: !!condominioId,
   });
 
-  const { data: tiposData } = useQuery({
-    queryKey: ["tipos-reportes", condominioId],
-    queryFn: () =>
-      fetchTable<Tipo>("tipos", tipoFilter ? { filters: tipoFilter } : undefined),
-    enabled: !!condominioId,
-  });
-
-  const { data: agrupadoresData } = useQuery({
-    queryKey: ["agrupadores-reportes", condominioId],
-    queryFn: () => fetchTable<Agrupador>("agrupadores"),
-    enabled: !!condominioId,
-  });
-
-  const agrupadores = useMemo(() => {
-    const tipos = tiposData?.results ?? [];
-    const tipoIds = tipos.map((t) => t.id);
-    return agrupadoresForTipos(agrupadoresData?.results ?? [], tipoIds);
-  }, [tiposData, agrupadoresData]);
+  const reportes = useMemo(() => {
+    const all = data?.results ?? [];
+    if (!condominioId) return [];
+    return all.filter((row) =>
+      rowBelongsToCondominio(row[FIELDS.REPORTES.CONDOMINIO], condominioId)
+    );
+  }, [data, condominioId]);
 
   const createMutation = useMutation({
     mutationFn: async ({
       descripcion,
       agrupadorId,
+      proyectoId,
       files,
-    }: {
-      descripcion: string;
-      agrupadorId?: number;
-      files: File[];
-    }) => {
+    }: ReporteFormValues & { files: File[] }) => {
       if (!condominioId) throw new Error("Condominio requerido");
+      const proyecto = proyectos.find((row) => row.id === proyectoId);
+      const proyectoAgrupadorId = proyecto
+        ? getLinkIds(proyecto[FIELDS.PROYECTOS.AGRUPADOR])[0]
+        : null;
+      if (proyectoAgrupadorId && proyectoAgrupadorId !== agrupadorId) {
+        throw new Error("El proyecto seleccionado no corresponde al agrupador");
+      }
       const uploaded = await Promise.all(files.map((file) => uploadFile(file)));
       return createTableRow<Reporte>("reportes", {
         [FIELDS.REPORTES.DESCRIPCION]: descripcion,
         [FIELDS.REPORTES.CONDOMINIO]: [condominioId],
         ...(user?.id ? { [FIELDS.REPORTES.REPORTADO_POR]: user.id } : {}),
-        ...(agrupadorId
-          ? { [FIELDS.REPORTES.AGRUPADORES]: agrupadorId }
-          : {}),
+        [FIELDS.REPORTES.AGRUPADORES]: agrupadorId,
         ...(uploaded.length
           ? {
               [FIELDS.REPORTES.IMAGENES]: uploaded.map((f) => ({ name: f.name })),
@@ -107,26 +94,23 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       showCreateSuccess("El reporte");
       queryClient.invalidateQueries({ queryKey: ["reportes", condominioId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reportes", condominioId] });
       setDialogOpen(false);
     },
   });
 
   const value = useMemo(
     () => ({
-      reportes: data?.results ?? [],
-      agrupadores,
+      reportes,
       isLoading,
       dialogOpen,
       openDialog: () => setDialogOpen(true),
       closeDialog: () => setDialogOpen(false),
-      createReporte: (input: {
-        descripcion: string;
-        agrupadorId?: number;
-        files: File[];
-      }) => createMutation.mutateAsync(input).then(() => undefined),
+      createReporte: (input: ReporteFormValues & { files: File[] }) =>
+        createMutation.mutateAsync(input).then(() => undefined),
       isCreating: createMutation.isPending,
     }),
-    [data, agrupadores, isLoading, dialogOpen, createMutation]
+    [reportes, isLoading, dialogOpen, createMutation]
   );
 
   return (
@@ -141,3 +125,4 @@ export function useReportes() {
   }
   return ctx;
 }
+

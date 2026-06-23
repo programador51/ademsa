@@ -50,3 +50,17 @@ export function rowBelongsToProyectos(
   const ids = getLinkIds(proyectoLink);
   return ids.some((id) => proyectoIds.includes(id));
 }
+
+export function rowBelongsToCondominio(
+  condominioLink:
+    | BaserowLinkRow
+    | BaserowLinkRow[]
+    | number
+    | number[]
+    | null
+    | undefined,
+  condominioId: number
+): boolean {
+  if (!condominioId) return false;
+  return getLinkIds(condominioLink).includes(condominioId);
+}

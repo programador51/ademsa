@@ -2,9 +2,11 @@
 
 import { Alert, Button, MenuItem, Stack, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import SummarizeIcon from "@mui/icons-material/Summarize";
 import MobileCardList from "@/components/common/MobileCardList";
 import ProyectoHierarchyFiltersBar from "@/components/filters/ProyectoHierarchyFiltersBar";
 import { useApp } from "@/contexts/AppContext";
+import { INVERSIONES_REPORTE_URL } from "@/lib/appBrand";
 import { resolveProyectoHierarchy } from "@/lib/baserow/proyectoHierarchyUtils";
 import { formatDateTime, formatFolio, formatMoney } from "@/lib/formatters";
 import { FIELDS, INVERSION_ESTADO, ROLES } from "@/lib/baserow/constants";
@@ -77,9 +79,24 @@ export default function InversionesView() {
           `la inversión folio ${formatFolio(row[FIELDS.INVERSIONES.FOLIO])}`
         }
         headerAction={
-          <Button size="small" startIcon={<AddIcon />} onClick={openCreate}>
-            Nuevo
-          </Button>
+          <Stack direction="row" spacing={1}>
+            {INVERSIONES_REPORTE_URL ? (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<SummarizeIcon />}
+                component="a"
+                href={INVERSIONES_REPORTE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Reporte
+              </Button>
+            ) : null}
+            <Button size="small" startIcon={<AddIcon />} onClick={openCreate}>
+              Nuevo
+            </Button>
+          </Stack>
         }
         columns={[
           {

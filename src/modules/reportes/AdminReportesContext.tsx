@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useState,
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -16,16 +17,28 @@ import {
   fetchTable,
   updateTableRow,
 } from "@/lib/api/data";
+import { rowBelongsToCondominio } from "@/lib/baserow/condominioFilters";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import {
   FIELDS,
   REPORTE_ESTATUS,
 } from "@/lib/baserow/constants";
-import { Agrupador, Proyecto, Reporte } from "@/lib/baserow/types";
+import { Agrupador, Proyecto, Reporte, Tipo } from "@/lib/baserow/types";
 import { getLinkIds, getSelectId } from "@/lib/baserow/utils";
+import {
+  AdminReportesFilters,
+  defaultAdminReportesFilters,
+  reportMatchesAdminFilters,
+  resolveReporteHierarchy,
+} from "./filters";
 
 interface AdminReportesContextValue {
   reportes: Reporte[];
+  filters: AdminReportesFilters;
+  setFilters: (filters: AdminReportesFilters) => void;
+  tipos: ReturnType<typeof useServiciosHierarchyData>["tipos"];
+  agrupadores: Agrupador[];
+  proyectos: Proyecto[];
   isLoading: boolean;
   updateReporte: (input: {
     id: number;
@@ -44,8 +57,17 @@ const AdminReportesContext = createContext<AdminReportesContextValue | undefined
 function resolveProyectoIdForReporte(
   reporte: Reporte,
   agrupadores: Agrupador[],
-  proyectos: Proyecto[]
+  proyectos: Proyecto[],
+  tipos: Tipo[]
 ): number | undefined {
+  const hierarchy = resolveReporteHierarchy(
+    reporte,
+    agrupadores,
+    proyectos,
+    tipos
+  );
+  if (hierarchy.proyectoId) return hierarchy.proyectoId;
+
   const agrupadorId = getLinkIds(reporte[FIELDS.REPORTES.AGRUPADORES])[0];
   if (!agrupadorId) return undefined;
 
@@ -64,18 +86,36 @@ function resolveProyectoIdForReporte(
 export function AdminReportesProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { condominioId } = useApp();
-  const { agrupadores, proyectos } = useServiciosHierarchyData(condominioId);
+  const [filters, setFilters] = useState(defaultAdminReportesFilters);
+  const { tipos, agrupadores, proyectos } = useServiciosHierarchyData(condominioId);
 
-  const filters = condominioId
+  const apiFilters = condominioId
     ? buildCondominioFilter(condominioId, FIELDS.REPORTES.CONDOMINIO)
     : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-reportes", condominioId],
     queryFn: () =>
-      fetchTable<Reporte>("reportes", filters ? { filters } : undefined),
+      fetchTable<Reporte>("reportes", apiFilters ? { filters: apiFilters } : undefined),
     enabled: !!condominioId,
   });
+
+  const reportes = useMemo(() => {
+    if (!condominioId) return [];
+    const all = (data?.results ?? []).filter((row) =>
+      rowBelongsToCondominio(row[FIELDS.REPORTES.CONDOMINIO], condominioId)
+    );
+    return all.filter((row) =>
+      reportMatchesAdminFilters(
+        row,
+        filters,
+        agrupadores,
+        proyectos,
+        tipos,
+        condominioId
+      )
+    );
+  }, [data, condominioId, filters, agrupadores, proyectos, tipos]);
 
   const updateMutation = useMutation({
     mutationFn: async ({
@@ -104,7 +144,8 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
       const proyectoId = resolveProyectoIdForReporte(
         reporte,
         agrupadores,
-        proyectos
+        proyectos,
+        tipos
       );
       const fechaReporte =
         reporte[FIELDS.REPORTES.FECHA_REPORTE]?.slice(0, 10) ??
@@ -142,7 +183,12 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      reportes: data?.results ?? [],
+      reportes,
+      filters,
+      setFilters,
+      tipos,
+      agrupadores,
+      proyectos,
       isLoading,
       updateReporte,
       createCorrectivoFromReporte,
@@ -150,7 +196,11 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
       isCreatingCorrectivo: createCorrectivoMutation.isPending,
     }),
     [
-      data,
+      reportes,
+      filters,
+      tipos,
+      agrupadores,
+      proyectos,
       isLoading,
       updateReporte,
       createCorrectivoFromReporte,

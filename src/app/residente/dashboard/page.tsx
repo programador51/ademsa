@@ -4,19 +4,19 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   Grid,
+  Paper,
   Stack,
   Typography,
 } from "@mui/material";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useRouter } from "next/navigation";
 import { useApp } from "@/contexts/AppContext";
 import { ROLES } from "@/lib/baserow/constants";
 
 export default function ResidenteDashboardPage() {
   const router = useRouter();
-  const { user, condominioId } = useApp();
+  const { user, condominioId, condominioNombre } = useApp();
 
   if (user?.rol !== ROLES.RESIDENTE) {
     return <Alert severity="error">Acceso no autorizado</Alert>;
@@ -38,46 +38,55 @@ export default function ResidenteDashboardPage() {
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={2}>
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
           Bienvenido, {user?.nombre}
         </Typography>
-        <Typography color="text.secondary">
-          Gestiona tus reportes y actualiza tu perfil desde este portal.
+        <Typography variant="body2" color="text.secondary">
+          {condominioNombre ?? `Condominio #${condominioId}`}
         </Typography>
       </Box>
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Crear reporte
+      <Grid container spacing={1.5}>
+        <Grid size={{ xs: 6 }}>
+          <Paper
+            component="button"
+            type="button"
+            onClick={() => router.push("/residente/reportes")}
+            elevation={0}
+            sx={{
+              width: "100%",
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 2,
+              cursor: "pointer",
+              textAlign: "center",
+              bgcolor: "background.paper",
+              "&:hover": { bgcolor: "action.hover" },
+            }}
+          >
+            <Stack spacing={1} sx={{ alignItems: "center" }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "#c6282818",
+                  color: "#c62828",
+                }}
+              >
+                <AssignmentIcon />
+              </Box>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Crear reportes
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Reporta incidencias o solicitudes para tu condominio.
-              </Typography>
-              <Button variant="contained" onClick={() => router.push("/residente/reportes")}>
-                Ir a reportes
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Mi perfil
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Actualiza tu nombre y revisa tus unidades asignadas.
-              </Typography>
-              <Button variant="outlined" onClick={() => router.push("/residente/perfil")}>
-                Ver perfil
-              </Button>
-            </CardContent>
-          </Card>
+            </Stack>
+          </Paper>
         </Grid>
       </Grid>
     </Stack>

@@ -22,6 +22,7 @@ interface ProyectoHierarchyFieldsProps<T extends FieldValues> {
   tipoField?: FieldPath<T>;
   agrupadorField?: FieldPath<T>;
   proyectoField?: FieldPath<T>;
+  required?: boolean;
 }
 
 export function ProyectoHierarchyFields<T extends FieldValues>({
@@ -31,6 +32,7 @@ export function ProyectoHierarchyFields<T extends FieldValues>({
   tipoField = "tipoId" as FieldPath<T>,
   agrupadorField = "agrupadorId" as FieldPath<T>,
   proyectoField = "proyectoId" as FieldPath<T>,
+  required = false,
 }: ProyectoHierarchyFieldsProps<T>) {
   const { condominioId } = useApp();
   const { tipos, agrupadores, proyectos, isLoading } =
@@ -90,7 +92,7 @@ export function ProyectoHierarchyFields<T extends FieldValues>({
         name={tipoField}
         control={control}
         label="Nivel 1 · Tipo"
-        emptyOption="Selecciona un tipo"
+        emptyOption={required ? undefined : "Selecciona un tipo"}
         options={tipos.map((tipo) => ({
           value: tipo.id,
           label: tipo[FIELDS.TIPOS.NOMBRE],
@@ -100,7 +102,7 @@ export function ProyectoHierarchyFields<T extends FieldValues>({
         name={agrupadorField}
         control={control}
         label="Nivel 2 · Agrupador"
-        emptyOption="Selecciona un agrupador"
+        emptyOption={required ? undefined : "Selecciona un agrupador"}
         disabled={!tipoId}
         options={agrupadoresFiltrados.map((item) => ({
           value: item.id,
@@ -111,7 +113,7 @@ export function ProyectoHierarchyFields<T extends FieldValues>({
         name={proyectoField}
         control={control}
         label="Nivel 3 · Proyecto"
-        emptyOption="Selecciona un proyecto"
+        emptyOption={required ? undefined : "Selecciona un proyecto"}
         disabled={!agrupadorId}
         options={proyectosFiltrados.map((item) => ({
           value: item.id,

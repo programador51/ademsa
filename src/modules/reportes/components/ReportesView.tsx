@@ -12,30 +12,27 @@ import AddIcon from "@mui/icons-material/Add";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useForm, Resolver } from "react-hook-form";
-import * as yup from "yup";
 import MobileCardList from "@/components/common/MobileCardList";
 import FilePondUpload from "@/components/forms/FilePondUpload";
-import { FormSelect } from "@/components/forms/FormSelect";
+import { ProyectoHierarchyFields } from "@/components/forms/ProyectoHierarchyFields";
 import { FormTextField } from "@/components/forms/FormTextField";
+import { useApp } from "@/contexts/AppContext";
+import { useServiciosHierarchyData } from "@/hooks/useServiciosHierarchyData";
 import { FIELDS } from "@/lib/baserow/constants";
 import { formatDateTime } from "@/lib/formatters";
-import { getLinkLabel } from "@/lib/baserow/utils";
+import { resolveReporteHierarchy } from "../filters";
+import {
+  defaultReporteFormValues,
+  reporteFormSchema,
+  ReporteFormValues,
+} from "../schemas";
 import { useReportes } from "../ReportesContext";
 
-const reporteSchema = yup.object({
-  descripcion: yup.string().trim().required("La descripción es requerida"),
-  agrupadorId: yup.number().optional(),
-});
-
-export type ReporteFormValues = {
-  descripcion: string;
-  agrupadorId?: number;
-};
-
 export default function ReportesView() {
+  const { condominioId } = useApp();
+  const { tipos, agrupadores, proyectos } = useServiciosHierarchyData(condominioId);
   const {
     reportes,
-    agrupadores,
     isLoading,
     dialogOpen,
     openDialog,
@@ -45,24 +42,21 @@ export default function ReportesView() {
   } = useReportes();
   const [files, setFiles] = useState<File[]>([]);
 
-  const { control, handleSubmit, reset } = useForm<ReporteFormValues>({
-    resolver: yupResolver(reporteSchema) as Resolver<ReporteFormValues>,
-    defaultValues: { descripcion: "", agrupadorId: undefined },
-  });
+  const { control, handleSubmit, reset, watch, setValue } =
+    useForm<ReporteFormValues>({
+      resolver: yupResolver(reporteFormSchema) as Resolver<ReporteFormValues>,
+      defaultValues: defaultReporteFormValues,
+    });
 
   const handleClose = () => {
-    reset();
+    reset(defaultReporteFormValues);
     setFiles([]);
     closeDialog();
   };
 
   const onSubmit = handleSubmit(async (values) => {
-    await createReporte({
-      descripcion: values.descripcion,
-      agrupadorId: values.agrupadorId,
-      files,
-    });
-    reset();
+    await createReporte({ ...values, files });
+    reset(defaultReporteFormValues);
     setFiles([]);
   });
 
@@ -85,9 +79,24 @@ export default function ReportesView() {
             render: (row) => formatDateTime(row[FIELDS.REPORTES.FECHA_REPORTE]),
           },
           {
-            id: FIELDS.REPORTES.AGRUPADORES,
-            label: "Agrupador",
-            render: (row) => getLinkLabel(row[FIELDS.REPORTES.AGRUPADORES]),
+            id: "tipo",
+            label: "Nivel 1 · Tipo",
+            render: (row) =>
+              resolveReporteHierarchy(row, agrupadores, proyectos, tipos).tipoNombre,
+          },
+          {
+            id: "agrupador",
+            label: "Nivel 2 · Agrupador",
+            render: (row) =>
+              resolveReporteHierarchy(row, agrupadores, proyectos, tipos)
+                .agrupadorNombre,
+          },
+          {
+            id: "proyecto",
+            label: "Nivel 3 · Proyecto",
+            render: (row) =>
+              resolveReporteHierarchy(row, agrupadores, proyectos, tipos)
+                .proyectoNombre,
           },
         ]}
         headerAction={
@@ -107,16 +116,13 @@ export default function ReportesView() {
               label="Descripción"
               multiline
               minRows={4}
+              required
             />
-            <FormSelect
-              name="agrupadorId"
+            <ProyectoHierarchyFields
               control={control}
-              label="Agrupador (opcional)"
-              emptyOption="Sin agrupador"
-              options={agrupadores.map((item) => ({
-                value: item.id,
-                label: item[FIELDS.AGRUPADORES.NOMBRE],
-              }))}
+              watch={watch}
+              setValue={setValue}
+              required
             />
             <FilePondUpload files={files} onChange={setFiles} />
           </Stack>
