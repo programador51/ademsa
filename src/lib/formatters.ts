@@ -28,6 +28,33 @@ export function formatFolio(
   return String(num).padStart(pad, "0");
 }
 
+export function matchesFolioSearch(
+  folioValue: number | string | null | undefined,
+  query: string
+): boolean {
+  const trimmed = query.trim();
+  if (!trimmed) return true;
+  if (folioValue === null || folioValue === undefined || folioValue === "") {
+    return false;
+  }
+
+  const formatted = formatFolio(folioValue);
+  const raw = String(folioValue);
+  const digitsOnly = trimmed.replace(/\D/g, "");
+
+  if (formatted.includes(trimmed) || raw.includes(trimmed)) {
+    return true;
+  }
+
+  if (!digitsOnly) return false;
+
+  return formatted.includes(digitsOnly) || raw.includes(digitsOnly);
+}
+
+export function matchesRecordIdSearch(recordId: number, query: string): boolean {
+  return matchesFolioSearch(recordId, query);
+}
+
 export function formatDateTime(value: string | null | undefined): string {
   if (!value) return "—";
   const parsed = dayjs(value);

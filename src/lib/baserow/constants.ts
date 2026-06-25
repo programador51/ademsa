@@ -39,6 +39,7 @@ export const FIELDS = {
     CREADO: "field_9103351",
     AGRUPADORES: "field_9103564",
     CONDOMINIO: "field_9122984",
+    ACCESO_RAPIDO: "field_9227635",
   },
   AGRUPADORES: {
     NOMBRE: "field_9103354",

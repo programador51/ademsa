@@ -52,7 +52,7 @@ const MODULES = [
     color: "#2e7d32",
   },
   {
-    title: "Tickets",
+    title: "Reportes",
     href: "/admin/reportes",
     icon: AssignmentIcon,
     color: "#c62828",

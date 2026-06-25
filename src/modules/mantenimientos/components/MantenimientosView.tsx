@@ -78,10 +78,27 @@ export default function MantenimientosView() {
       <Stack spacing={2}>
         <ProyectoHierarchyFiltersBar
           filters={hierarchyFilters}
-          onChange={setHierarchyFilters}
+          onChange={(hierarchy) =>
+            setHierarchyFilters({ ...hierarchyFilters, ...hierarchy })
+          }
           tipos={tipos}
           agrupadores={agrupadores}
           proyectos={proyectos}
+          extraFilters={
+            <TextField
+              label="Folio"
+              value={hierarchyFilters.folio}
+              onChange={(e) =>
+                setHierarchyFilters({
+                  ...hierarchyFilters,
+                  folio: e.target.value,
+                })
+              }
+              fullWidth
+              size="small"
+              placeholder="Buscar por folio"
+            />
+          }
         />
         <MobileCardList<MantenimientoPreventivo>
           title={title}
@@ -198,9 +215,23 @@ export default function MantenimientosView() {
         agrupadores={agrupadores}
         proyectos={proyectos}
         extraFilters={
-          <TextField
-            select
-            label="Estatus"
+          <Stack spacing={1.5}>
+            <TextField
+              label="Folio"
+              value={correctivoFilters.folio}
+              onChange={(e) =>
+                setCorrectivoFilters({
+                  ...correctivoFilters,
+                  folio: e.target.value,
+                })
+              }
+              fullWidth
+              size="small"
+              placeholder="Buscar por folio"
+            />
+            <TextField
+              select
+              label="Estatus"
             value={correctivoFilters.estatus}
             onChange={(e) =>
               setCorrectivoFilters({
@@ -218,6 +249,7 @@ export default function MantenimientosView() {
               </MenuItem>
             ))}
           </TextField>
+          </Stack>
         }
       />
       <MobileCardList<MantenimientoCorrectivo>

@@ -23,12 +23,11 @@ import {
   rowBelongsToProyectos,
 } from "@/lib/baserow/condominioFilters";
 import {
-  defaultProyectoHierarchyFilters,
-  ProyectoHierarchyFilters,
   rowMatchesHierarchyFilters,
 } from "@/lib/baserow/proyectoHierarchyUtils";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS, REPORTE_ESTATUS } from "@/lib/baserow/constants";
+import { matchesFolioSearch } from "@/lib/formatters";
 import {
   Agrupador,
   MantenimientoCorrectivo,
@@ -40,7 +39,9 @@ import {
 import { getLinkIds } from "@/lib/baserow/utils";
 import {
   defaultMantCorrectivoFilters,
+  defaultMantPreventivoFilters,
   MantCorrectivoFilters,
+  MantPreventivoFilters,
 } from "./filters";
 import {
   defaultMantCorrectivoValues,
@@ -54,8 +55,8 @@ import {
 interface MantenimientosContextValue {
   tipo: MantenimientoTipo;
   rows: (MantenimientoPreventivo | MantenimientoCorrectivo)[];
-  hierarchyFilters: ProyectoHierarchyFilters;
-  setHierarchyFilters: (filters: ProyectoHierarchyFilters) => void;
+  hierarchyFilters: MantPreventivoFilters;
+  setHierarchyFilters: (filters: MantPreventivoFilters) => void;
   correctivoFilters: MantCorrectivoFilters;
   setCorrectivoFilters: (filters: MantCorrectivoFilters) => void;
   tipos: Tipo[];
@@ -98,7 +99,7 @@ export function MantenimientosProvider({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [followUpParentId, setFollowUpParentId] = useState<number | null>(null);
   const [hierarchyFilters, setHierarchyFilters] = useState(
-    defaultProyectoHierarchyFilters
+    defaultMantPreventivoFilters
   );
   const [correctivoFilters, setCorrectivoFilters] = useState(
     defaultMantCorrectivoFilters
@@ -159,15 +160,20 @@ export function MantenimientosProvider({
       const base = (all as MantenimientoPreventivo[]).filter((row) =>
         rowBelongsToProyectos(row[FIELDS.MANT_PREVENTIVOS.PROYECTO], proyectoIds)
       );
-      return base.filter((row) =>
-        rowMatchesHierarchyFilters(
+      return base.filter((row) => {
+        if (
+          !matchesFolioSearch(row[FIELDS.MANT_PREVENTIVOS.FOLIO], hierarchyFilters.folio)
+        ) {
+          return false;
+        }
+        return rowMatchesHierarchyFilters(
           row[FIELDS.MANT_PREVENTIVOS.PROYECTO],
           hierarchyFilters,
           agrupadores,
           proyectos,
           tipos
-        )
-      );
+        );
+      });
     }
     return (all as MantenimientoCorrectivo[])
       .filter((row) =>
@@ -176,6 +182,11 @@ export function MantenimientosProvider({
       .filter((row) => {
         const estatus = row[FIELDS.MANT_CORRECTIVOS.ESTATUS] ?? "";
         if (correctivoFilters.estatus && estatus !== correctivoFilters.estatus) {
+          return false;
+        }
+        if (
+          !matchesFolioSearch(row[FIELDS.MANT_CORRECTIVOS.FOLIO], correctivoFilters.folio)
+        ) {
           return false;
         }
         return rowMatchesHierarchyFilters(

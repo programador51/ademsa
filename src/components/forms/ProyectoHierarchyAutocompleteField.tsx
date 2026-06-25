@@ -3,6 +3,7 @@
 import {
   Autocomplete,
   Box,
+  Stack,
   TextField,
   TextFieldProps,
   Typography,
@@ -44,9 +45,13 @@ export function ProyectoHierarchyAutocompleteField({
   loading = false,
 }: ProyectoHierarchyAutocompleteFieldProps) {
   const fuse = useMemo(() => createProyectoHierarchyFuse(options), [options]);
+  const selectionHint = value
+    ? `Nivel 1 · ${value.tipoNombre} · Nivel 2 · ${value.agrupadorNombre}`
+    : null;
 
   return (
-    <Autocomplete<ProyectoHierarchyOption, false, false, false>
+    <Stack spacing={0.25}>
+      <Autocomplete<ProyectoHierarchyOption, false, false, false>
       disabled={disabled || options.length === 0}
       loading={loading}
       options={options}
@@ -100,11 +105,17 @@ export function ProyectoHierarchyAutocompleteField({
           placeholder={placeholder}
           required={required}
           error={error}
-          helperText={helperText}
+          helperText={error ? helperText : value ? undefined : helperText}
           fullWidth
           size={size}
         />
       )}
     />
+      {selectionHint && (
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+          {selectionHint}
+        </Typography>
+      )}
+    </Stack>
   );
 }

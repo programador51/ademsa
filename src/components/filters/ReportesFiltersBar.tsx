@@ -17,6 +17,7 @@ interface ReportesFiltersBarProps {
   tipos: Tipo[];
   agrupadores: Agrupador[];
   proyectos: Proyecto[];
+  useTicketLabels?: boolean;
 }
 
 export default function ReportesFiltersBar({
@@ -25,7 +26,10 @@ export default function ReportesFiltersBar({
   tipos,
   agrupadores,
   proyectos,
+  useTicketLabels = false,
 }: ReportesFiltersBarProps) {
+  const fechaLabel = useTicketLabels ? "Fecha ticket" : "Fecha reporte";
+
   return (
     <ProyectoHierarchyFiltersBar
       filters={filters}
@@ -35,6 +39,19 @@ export default function ReportesFiltersBar({
       proyectos={proyectos}
       extraFilters={
         <Stack spacing={1.5}>
+          <TextField
+            label={useTicketLabels ? "ID / Folio del ticket" : "ID / Folio del reporte"}
+            value={filters.registroId}
+            onChange={(e) =>
+              onChange({
+                ...filters,
+                registroId: e.target.value,
+              })
+            }
+            fullWidth
+            size="small"
+            placeholder="Buscar por ID o folio"
+          />
           <TextField
             select
             label="Estatus"
@@ -56,7 +73,7 @@ export default function ReportesFiltersBar({
             ))}
           </TextField>
           <DatePicker
-            label="Fecha reporte desde"
+            label={`${fechaLabel} desde`}
             value={filters.fechaDesde ? dayjs(filters.fechaDesde) : null}
             onChange={(date) =>
               onChange({
@@ -67,7 +84,7 @@ export default function ReportesFiltersBar({
             slotProps={{ textField: { fullWidth: true, size: "small" } }}
           />
           <DatePicker
-            label="Fecha reporte hasta"
+            label={`${fechaLabel} hasta`}
             value={filters.fechaHasta ? dayjs(filters.fechaHasta) : null}
             onChange={(date) =>
               onChange({

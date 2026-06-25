@@ -18,6 +18,7 @@ import {
 } from "@/lib/api/data";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS } from "@/lib/baserow/constants";
+import { seedCondominioServicios } from "@/lib/baserow/seedCondominioServicios";
 import { Condominio } from "@/lib/baserow/types";
 import {
   CondominioFormValues,
@@ -69,13 +70,20 @@ export function CondominiosProvider({ children }: { children: ReactNode }) {
       if (editing) {
         await updateTableRow<Condominio>("condominios", editing.id, payload);
       } else {
-        await createTableRow<Condominio>("condominios", payload);
+        const created = await createTableRow<Condominio>("condominios", payload);
+        await seedCondominioServicios(created.id);
       }
       return creating;
     },
     onSuccess: (creating) => {
       if (creating) showCreateSuccess("El condominio");
       queryClient.invalidateQueries({ queryKey: ["condominios"] });
+      queryClient.invalidateQueries({ queryKey: ["tipos"] });
+      queryClient.invalidateQueries({ queryKey: ["agrupadores-servicios"] });
+      queryClient.invalidateQueries({ queryKey: ["proyectos"] });
+      queryClient.invalidateQueries({ queryKey: ["hierarchy-tipos"] });
+      queryClient.invalidateQueries({ queryKey: ["hierarchy-agrupadores"] });
+      queryClient.invalidateQueries({ queryKey: ["hierarchy-proyectos"] });
       setDialogOpen(false);
       setEditing(null);
     },

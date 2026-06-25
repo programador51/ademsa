@@ -9,6 +9,15 @@ export function tiposForCondominio(tipos: Tipo[], condominioId: number): Tipo[] 
   );
 }
 
+export function tiposAccesoRapidoForCondominio(
+  tipos: Tipo[],
+  condominioId: number
+): Tipo[] {
+  return tiposForCondominio(tipos, condominioId).filter(
+    (row) => row[FIELDS.TIPOS.ACCESO_RAPIDO] === true
+  );
+}
+
 export function agrupadoresForTipos(
   agrupadores: Agrupador[],
   tipoIds: number[]

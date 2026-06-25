@@ -113,7 +113,7 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
       });
     },
     onSuccess: () => {
-      showCreateSuccess("El reporte");
+      showCreateSuccess("El ticket");
       queryClient.invalidateQueries({ queryKey: ["reportes", condominioId] });
       queryClient.invalidateQueries({ queryKey: ["admin-reportes", condominioId] });
       setDialogOpen(false);

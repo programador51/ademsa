@@ -12,9 +12,9 @@ import {
   Typography,
 } from "@mui/material";
 import BuildIcon from "@mui/icons-material/Build";
-import ImageIcon from "@mui/icons-material/Image";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import ReportAttachmentButton from "@/components/common/ReportAttachmentButton";
 import ReportesFiltersBar from "@/components/filters/ReportesFiltersBar";
 import { useApp } from "@/contexts/AppContext";
 import { formatDateTime, formatFolio } from "@/lib/formatters";
@@ -24,7 +24,7 @@ import {
   REPORTE_ESTATUS_LABELS,
   ROLES,
 } from "@/lib/baserow/constants";
-import { BaserowFile, Reporte } from "@/lib/baserow/types";
+import { Reporte } from "@/lib/baserow/types";
 import { getLinkIds, getLinkLabel, getSelectId } from "@/lib/baserow/utils";
 import Swal from "sweetalert2";
 import { reportHasMantenimiento, resolveReporteHierarchy } from "../filters";
@@ -230,9 +230,13 @@ export default function AdminReportesView() {
                       <Typography variant="caption" color="text.secondary">
                         Imágenes adjuntas
                       </Typography>
-                      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ flexWrap: "wrap", width: "100%" }}
+                      >
                         {imagenes.map((image, index) => (
-                          <ReportImageButton
+                          <ReportAttachmentButton
                             key={`${image.url}-${index}`}
                             image={image}
                             index={index}
@@ -251,7 +255,7 @@ export default function AdminReportesView() {
                     >
                       {cerrado ? "Reabrir reporte" : "Cerrar reporte"}
                     </Button>
-                    {!cerrado && !tieneMantenimiento && (
+                    {!cerrado && !tieneMantenimiento && !hierarchy.tipoAccesoRapido && (
                       <Button
                         size="small"
                         variant="contained"
@@ -275,29 +279,5 @@ export default function AdminReportesView() {
         })
       )}
     </Stack>
-  );
-}
-
-function ReportImageButton({
-  image,
-  index,
-}: {
-  image: BaserowFile;
-  index: number;
-}) {
-  const label = image.name?.trim() || `Imagen ${index + 1}`;
-
-  return (
-    <Button
-      size="small"
-      variant="outlined"
-      startIcon={<ImageIcon />}
-      component="a"
-      href={image.url}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {label}
-    </Button>
   );
 }

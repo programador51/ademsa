@@ -1,6 +1,7 @@
 "use client";
 
-import { Alert } from "@mui/material";
+import { Alert, Button } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import MobileCardList from "@/components/common/MobileCardList";
 import { useApp } from "@/contexts/AppContext";
 import { FIELDS, ROLES } from "@/lib/baserow/constants";
@@ -13,6 +14,7 @@ export default function CondominiosView() {
     rows,
     isLoading,
     error,
+    openCreate,
     openEdit,
     deleteCondominio,
   } = useCondominios();
@@ -31,6 +33,11 @@ export default function CondominiosView() {
         onDelete={(row) => deleteCondominio(row)}
         deleteLabel={(row) =>
           `el condominio "${row[FIELDS.CONDOMINIOS.NOMBRE] ?? `#${row.id}`}"`
+        }
+        headerAction={
+          <Button size="small" startIcon={<AddIcon />} onClick={openCreate}>
+            Nuevo
+          </Button>
         }
         columns={[
           {

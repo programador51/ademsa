@@ -90,7 +90,6 @@ export function UsuariosProvider({ children }: { children: ReactNode }) {
         [FIELDS.USUARIOS.CONDOMINIOS]: values.condominioId ? [values.condominioId] : [],
         [FIELDS.USUARIOS.UNIDADES]: values.unidadId ? [values.unidadId] : [],
       };
-      if (values.password) payload[FIELDS.USUARIOS.CONTRASENA] = values.password;
       if (editingId) await updateTableRow("usuarios", editingId, payload);
       else await createTableRow("usuarios", payload);
       return creating;
@@ -219,7 +218,6 @@ export function getUsuarioEditValues(row: Usuario): UsuarioFormValues {
     nombre: row[FIELDS.USUARIOS.NOMBRE],
     email: row[FIELDS.USUARIOS.EMAIL],
     rol: getSelectId(row[FIELDS.USUARIOS.ROL]) ?? 0,
-    password: "",
     condominioId: getLinkIds(row[FIELDS.USUARIOS.CONDOMINIOS])[0] ?? null,
     unidadId: getLinkIds(row[FIELDS.USUARIOS.UNIDADES])[0] ?? null,
   };

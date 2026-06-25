@@ -100,12 +100,6 @@ export default function UsuarioFormDialog() {
                   label: ROLE_LABELS[value],
                 }))}
               />
-              <FormTextField
-                name="password"
-                control={usuarioForm.control}
-                label={editingId ? "Nueva contraseña (opcional)" : "Contraseña"}
-                type="password"
-              />
               <FormSelect
                 name="condominioId"
                 control={usuarioForm.control}

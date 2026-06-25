@@ -6,7 +6,6 @@ export const usuarioFormSchema = yup.object({
   nombre: yup.string().trim().required("El nombre es requerido"),
   email: yup.string().trim().email("Email inválido").required("El email es requerido"),
   rol: yup.number().required("El rol es requerido"),
-  password: yup.string().default(""),
   condominioId: yup.number().nullable().default(null),
   unidadId: yup.number().nullable().default(null),
 });
@@ -26,7 +25,6 @@ export const defaultUsuarioFormValues: UsuarioFormValues = {
   nombre: "",
   email: "",
   rol: 0,
-  password: "",
   condominioId: null,
   unidadId: null,
 };

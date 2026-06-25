@@ -1,11 +1,26 @@
 "use client";
 
-import { Alert, Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { Alert, Button, CircularProgress, Stack } from "@mui/material";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/contexts/AppContext";
 import { ROLES } from "@/lib/baserow/constants";
 import { ReportesProvider } from "@/modules/reportes/ReportesContext";
 import ReportesView from "@/modules/reportes/components/ReportesView";
+
+function ReportesPageContent() {
+  const searchParams = useSearchParams();
+  const quickCreateTipoId =
+    searchParams.get("create") === "1" && searchParams.get("tipoId")
+      ? Number(searchParams.get("tipoId"))
+      : null;
+
+  return (
+    <ReportesProvider>
+      <ReportesView quickCreateTipoId={quickCreateTipoId} />
+    </ReportesProvider>
+  );
+}
 
 export default function ReportesPage() {
   const router = useRouter();
@@ -25,14 +40,20 @@ export default function ReportesPage() {
           </Button>
         }
       >
-        Selecciona un condominio para ver tus reportes
+        Selecciona un condominio para ver tus tickets
       </Alert>
     );
   }
 
   return (
-    <ReportesProvider>
-      <ReportesView />
-    </ReportesProvider>
+    <Suspense
+      fallback={
+        <Stack alignItems="center" sx={{ py: 4 }}>
+          <CircularProgress size={28} />
+        </Stack>
+      }
+    >
+      <ReportesPageContent />
+    </Suspense>
   );
 }

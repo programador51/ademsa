@@ -114,3 +114,31 @@ export function proyectosByAgrupadorFilter(
     getLinkIds(row[FIELDS.PROYECTOS.AGRUPADOR]).includes(Number(agrupadorId))
   );
 }
+
+export function getDefaultHierarchyForTipo(
+  tipoId: number,
+  agrupadores: Agrupador[],
+  proyectos: Proyecto[]
+): { agrupadorId: number | null; proyectoId: number | null } {
+  const tipoAgrupadores = agrupadores.filter((row) =>
+    getLinkIds(row[FIELDS.AGRUPADORES.TIPO]).includes(tipoId)
+  );
+  const agrupador =
+    tipoAgrupadores.find(
+      (row) => row[FIELDS.AGRUPADORES.NOMBRE]?.trim() === "N/A"
+    ) ?? tipoAgrupadores[0];
+  if (!agrupador) return { agrupadorId: null, proyectoId: null };
+
+  const agrupadorProyectos = proyectos.filter((row) =>
+    getLinkIds(row[FIELDS.PROYECTOS.AGRUPADOR]).includes(agrupador.id)
+  );
+  const proyecto =
+    agrupadorProyectos.find(
+      (row) => row[FIELDS.PROYECTOS.NOMBRE]?.trim() === "N/A"
+    ) ?? agrupadorProyectos[0];
+
+  return {
+    agrupadorId: agrupador.id,
+    proyectoId: proyecto?.id ?? null,
+  };
+}

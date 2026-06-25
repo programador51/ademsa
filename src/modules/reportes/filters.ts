@@ -5,11 +5,13 @@ import {
 } from "@/lib/baserow/proyectoHierarchyUtils";
 import { Agrupador, Proyecto, Reporte, Tipo } from "@/lib/baserow/types";
 import { getLinkIds, getSelectId } from "@/lib/baserow/utils";
+import { matchesRecordIdSearch } from "@/lib/formatters";
 
 export interface AdminReportesFilters extends ProyectoHierarchyFilters {
   estatus: number | "";
   fechaDesde: string;
   fechaHasta: string;
+  registroId: string;
 }
 
 export type ReportesFilters = AdminReportesFilters;
@@ -19,6 +21,7 @@ export const defaultAdminReportesFilters: AdminReportesFilters = {
   estatus: "",
   fechaDesde: "",
   fechaHasta: "",
+  registroId: "",
 };
 
 export function resolveReporteHierarchy(
@@ -48,6 +51,7 @@ export function resolveReporteHierarchy(
     tipoId,
     agrupadorId,
     proyectoId: proyecto?.id ?? null,
+    tipoAccesoRapido: tipo?.[FIELDS.TIPOS.ACCESO_RAPIDO] === true,
   };
 }
 
@@ -73,6 +77,12 @@ export function reportMatchesAdminFilters(
   }
   if (filters.proyectoId && hierarchy.proyectoId !== Number(filters.proyectoId)) {
     return false;
+  }
+
+  if (filters.registroId.trim()) {
+    if (!matchesRecordIdSearch(reporte.id, filters.registroId)) {
+      return false;
+    }
   }
 
   if (filters.estatus) {
