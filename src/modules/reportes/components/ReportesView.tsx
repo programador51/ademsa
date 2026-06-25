@@ -13,13 +13,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useForm, Resolver } from "react-hook-form";
 import MobileCardList from "@/components/common/MobileCardList";
+import ReportesFiltersBar from "@/components/filters/ReportesFiltersBar";
 import FilePondUpload from "@/components/forms/FilePondUpload";
 import { ProyectoHierarchyFields } from "@/components/forms/ProyectoHierarchyFields";
 import { FormTextField } from "@/components/forms/FormTextField";
 import { useApp } from "@/contexts/AppContext";
-import { useServiciosHierarchyData } from "@/hooks/useServiciosHierarchyData";
-import { FIELDS } from "@/lib/baserow/constants";
+import { FIELDS, REPORTE_ESTATUS_LABELS } from "@/lib/baserow/constants";
 import { formatDateTime } from "@/lib/formatters";
+import { getSelectId } from "@/lib/baserow/utils";
 import { resolveReporteHierarchy } from "../filters";
 import {
   defaultReporteFormValues,
@@ -30,9 +31,13 @@ import { useReportes } from "../ReportesContext";
 
 export default function ReportesView() {
   const { condominioId } = useApp();
-  const { tipos, agrupadores, proyectos } = useServiciosHierarchyData(condominioId);
   const {
     reportes,
+    filters,
+    setFilters,
+    tipos,
+    agrupadores,
+    proyectos,
     isLoading,
     dialogOpen,
     openDialog,
@@ -62,6 +67,14 @@ export default function ReportesView() {
 
   return (
     <Stack spacing={2}>
+      <ReportesFiltersBar
+        filters={filters}
+        onChange={setFilters}
+        tipos={tipos}
+        agrupadores={agrupadores}
+        proyectos={proyectos}
+      />
+
       <MobileCardList
         title="Mis reportes"
         rows={reportes}
@@ -77,6 +90,14 @@ export default function ReportesView() {
             id: FIELDS.REPORTES.FECHA_REPORTE,
             label: "Fecha",
             render: (row) => formatDateTime(row[FIELDS.REPORTES.FECHA_REPORTE]),
+          },
+          {
+            id: FIELDS.REPORTES.ESTATUS,
+            label: "Estatus",
+            render: (row) => {
+              const id = getSelectId(row[FIELDS.REPORTES.ESTATUS]);
+              return id ? (REPORTE_ESTATUS_LABELS[id] ?? "—") : "—";
+            },
           },
           {
             id: "tipo",

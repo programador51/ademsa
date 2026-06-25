@@ -14,6 +14,8 @@ interface FormDatePickerProps<T extends FieldValues> {
   control: Control<T>;
   label: string;
   disabled?: boolean;
+  maxDate?: Dayjs;
+  minDate?: Dayjs;
 }
 
 export function FormDatePicker<T extends FieldValues>({
@@ -21,6 +23,8 @@ export function FormDatePicker<T extends FieldValues>({
   control,
   label,
   disabled,
+  maxDate,
+  minDate,
 }: FormDatePickerProps<T>) {
   return (
     <Controller
@@ -30,6 +34,8 @@ export function FormDatePicker<T extends FieldValues>({
         <DatePicker
           label={label}
           disabled={disabled}
+          maxDate={maxDate}
+          minDate={minDate}
           value={field.value ? dayjs(field.value) : null}
           onChange={(date: Dayjs | null) => {
             field.onChange(date ? date.format("YYYY-MM-DD") : "");

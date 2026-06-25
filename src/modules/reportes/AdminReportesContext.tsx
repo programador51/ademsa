@@ -23,7 +23,7 @@ import {
   FIELDS,
   REPORTE_ESTATUS,
 } from "@/lib/baserow/constants";
-import { Agrupador, Proyecto, Reporte, Tipo } from "@/lib/baserow/types";
+import { Agrupador, MantenimientoCorrectivo, Proyecto, Reporte, Tipo } from "@/lib/baserow/types";
 import { getLinkIds, getSelectId } from "@/lib/baserow/utils";
 import {
   AdminReportesFilters,
@@ -157,15 +157,22 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      await createTableRow("mant-correctivos", {
+      const created = await createTableRow<MantenimientoCorrectivo>("mant-correctivos", {
         [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: reporte[FIELDS.REPORTES.DESCRIPCION],
         [FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE]: fechaReporte,
         [FIELDS.MANT_CORRECTIVOS.PROYECTO]: proyectoId,
+        [FIELDS.MANT_CORRECTIVOS.REPORTES]: [reporte.id],
+      });
+
+      await updateTableRow("reportes", reporte.id, {
+        [FIELDS.REPORTES.MANTENIMIENTO]: created.id,
       });
     },
     onSuccess: () => {
       showCreateSuccess("El mantenimiento correctivo");
       queryClient.invalidateQueries({ queryKey: ["mant-correctivos"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reportes", condominioId] });
+      queryClient.invalidateQueries({ queryKey: ["reportes", condominioId] });
     },
   });
 

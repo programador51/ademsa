@@ -32,6 +32,7 @@ export const FIELDS = {
     REPORTADO_POR: "field_9143122",
     ESTATUS: "field_9171145",
     FECHA_CIERRE: "field_9171147",
+    MANTENIMIENTO: "field_9220531",
   },
   TIPOS: {
     NOMBRE: "field_9103350",
@@ -61,6 +62,9 @@ export const FIELDS = {
     ULTIMO: "field_9103514",
     SIGUIENTE: "field_9103515",
     PROYECTO: "field_9103516",
+    ESTADO: "field_9191169",
+    MANTENIMIENTO_ANTERIOR: "field_9220884",
+    APLICADO_EL: "field_9220922",
   },
   MANT_CORRECTIVOS: {
     FOLIO: "field_9103528",
@@ -71,6 +75,8 @@ export const FIELDS = {
     DESCRIPCION: "field_9170649",
     FECHA_CORRECCION: "field_9170974",
     ESTATUS: "field_9191196",
+    REPORTES: "field_9220532",
+    NOTAS: "field_9220792",
   },
   INVERSIONES: {
     FOLIO: "field_9103535",

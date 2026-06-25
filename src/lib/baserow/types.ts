@@ -52,6 +52,7 @@ export type Reporte = BaserowRow & {
   [FIELDS.REPORTES.REPORTADO_POR]: BaserowLinkRow | BaserowLinkRow[] | null;
   [FIELDS.REPORTES.ESTATUS]: BaserowSelectOption | number | null;
   [FIELDS.REPORTES.FECHA_CIERRE]: string | null;
+  [FIELDS.REPORTES.MANTENIMIENTO]: BaserowLinkRow | BaserowLinkRow[] | null;
 };
 
 export type Tipo = BaserowRow & {
@@ -81,7 +82,10 @@ export type MantenimientoPreventivo = BaserowRow & {
   [FIELDS.MANT_PREVENTIVOS.FOLIO]: number;
   [FIELDS.MANT_PREVENTIVOS.ULTIMO]: string | null;
   [FIELDS.MANT_PREVENTIVOS.SIGUIENTE]: string | null;
-  [FIELDS.MANT_PREVENTIVOS.PROYECTO]: BaserowLinkRow[];
+  [FIELDS.MANT_PREVENTIVOS.PROYECTO]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.MANT_PREVENTIVOS.ESTADO]: string | null;
+  [FIELDS.MANT_PREVENTIVOS.MANTENIMIENTO_ANTERIOR]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.MANT_PREVENTIVOS.APLICADO_EL]: string | null;
 };
 
 export type MantenimientoCorrectivo = BaserowRow & {
@@ -93,6 +97,8 @@ export type MantenimientoCorrectivo = BaserowRow & {
   [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: string | null;
   [FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]: string | null;
   [FIELDS.MANT_CORRECTIVOS.ESTATUS]: string | null;
+  [FIELDS.MANT_CORRECTIVOS.REPORTES]: BaserowLinkRow | BaserowLinkRow[] | null;
+  [FIELDS.MANT_CORRECTIVOS.NOTAS]: string | null;
 };
 
 export type Inversion = BaserowRow & {

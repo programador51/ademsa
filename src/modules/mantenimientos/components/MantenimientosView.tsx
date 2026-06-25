@@ -12,7 +12,10 @@ import {
   MantenimientoCorrectivo,
   MantenimientoPreventivo,
 } from "@/lib/baserow/types";
-import { useMantenimientos } from "../MantenimientosContext";
+import {
+  getCorrectivoDisplayDescription,
+  useMantenimientos,
+} from "../MantenimientosContext";
 import MantenimientoFormDialog from "./MantenimientoFormDialog";
 
 export default function MantenimientosView() {
@@ -24,6 +27,7 @@ export default function MantenimientosView() {
     error,
     openCreate,
     openEdit,
+    openFollowUp,
     deleteRow,
     hierarchyFilters,
     setHierarchyFilters,
@@ -32,6 +36,7 @@ export default function MantenimientosView() {
     tipos,
     agrupadores,
     proyectos,
+    reportesById,
   } = useMantenimientos();
 
   if (user?.rol !== ROLES.ADMINISTRADOR) {
@@ -73,12 +78,27 @@ export default function MantenimientosView() {
               Nuevo
             </Button>
           }
+          renderRowActions={(row) => (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={() => openFollowUp(row)}
+            >
+              Agregar
+            </Button>
+          )}
           columns={[
             {
               id: FIELDS.MANT_PREVENTIVOS.FOLIO,
               label: "Folio",
               primary: true,
               render: (row) => formatFolio(row[FIELDS.MANT_PREVENTIVOS.FOLIO]),
+            },
+            {
+              id: FIELDS.MANT_PREVENTIVOS.ESTADO,
+              label: "Estado",
+              render: (row) => row[FIELDS.MANT_PREVENTIVOS.ESTADO] ?? "—",
             },
             {
               id: "tipo",
@@ -110,6 +130,12 @@ export default function MantenimientosView() {
               label: "Siguiente",
               render: (row) =>
                 formatDateTime(row[FIELDS.MANT_PREVENTIVOS.SIGUIENTE]),
+            },
+            {
+              id: FIELDS.MANT_PREVENTIVOS.APLICADO_EL,
+              label: "Aplicado el",
+              render: (row) =>
+                formatDateTime(row[FIELDS.MANT_PREVENTIVOS.APLICADO_EL]),
             },
           ]}
         />
@@ -174,6 +200,11 @@ export default function MantenimientosView() {
             render: (row) => formatFolio(row[FIELDS.MANT_CORRECTIVOS.FOLIO]),
           },
           {
+            id: FIELDS.MANT_CORRECTIVOS.DESCRIPCION,
+            label: "Descripción",
+            render: (row) => getCorrectivoDisplayDescription(row, reportesById),
+          },
+          {
             id: "tipo",
             label: "Nivel 1 · Tipo",
             render: (row) =>
@@ -219,6 +250,11 @@ export default function MantenimientosView() {
             id: FIELDS.MANT_CORRECTIVOS.EJERCIDO,
             label: "Ejercido",
             render: (row) => formatMoney(row[FIELDS.MANT_CORRECTIVOS.EJERCIDO]),
+          },
+          {
+            id: FIELDS.MANT_CORRECTIVOS.NOTAS,
+            label: "Notas",
+            render: (row) => row[FIELDS.MANT_CORRECTIVOS.NOTAS]?.trim() || "—",
           },
         ]}
       />

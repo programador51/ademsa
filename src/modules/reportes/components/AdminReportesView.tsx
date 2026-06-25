@@ -15,7 +15,7 @@ import BuildIcon from "@mui/icons-material/Build";
 import ImageIcon from "@mui/icons-material/Image";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import ProyectoHierarchyFiltersBar from "@/components/filters/ProyectoHierarchyFiltersBar";
+import ReportesFiltersBar from "@/components/filters/ReportesFiltersBar";
 import { useApp } from "@/contexts/AppContext";
 import { formatDateTime } from "@/lib/formatters";
 import {
@@ -27,7 +27,7 @@ import {
 import { BaserowFile, Reporte } from "@/lib/baserow/types";
 import { getLinkLabel, getSelectId } from "@/lib/baserow/utils";
 import Swal from "sweetalert2";
-import { resolveReporteHierarchy } from "../filters";
+import { reportHasMantenimiento, resolveReporteHierarchy } from "../filters";
 import {
   isReporteCerrado,
   useAdminReportes,
@@ -91,58 +91,12 @@ export default function AdminReportesView() {
         Reportes de residentes
       </Typography>
 
-      <ProyectoHierarchyFiltersBar
+      <ReportesFiltersBar
         filters={filters}
-        onChange={(hierarchy) => setFilters({ ...filters, ...hierarchy })}
+        onChange={setFilters}
         tipos={tipos}
         agrupadores={agrupadores}
         proyectos={proyectos}
-        extraFilters={
-          <Stack spacing={1.5}>
-            <TextField
-              select
-              label="Estatus"
-              value={filters.estatus}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  estatus: e.target.value ? Number(e.target.value) : "",
-                })
-              }
-              fullWidth
-              size="small"
-            >
-              <MenuItem value="">Todos los estatus</MenuItem>
-              {Object.entries(REPORTE_ESTATUS_LABELS).map(([id, label]) => (
-                <MenuItem key={id} value={Number(id)}>
-                  {label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <DatePicker
-              label="Fecha reporte desde"
-              value={filters.fechaDesde ? dayjs(filters.fechaDesde) : null}
-              onChange={(date) =>
-                setFilters({
-                  ...filters,
-                  fechaDesde: date ? date.format("YYYY-MM-DD") : "",
-                })
-              }
-              slotProps={{ textField: { fullWidth: true, size: "small" } }}
-            />
-            <DatePicker
-              label="Fecha reporte hasta"
-              value={filters.fechaHasta ? dayjs(filters.fechaHasta) : null}
-              onChange={(date) =>
-                setFilters({
-                  ...filters,
-                  fechaHasta: date ? date.format("YYYY-MM-DD") : "",
-                })
-              }
-              slotProps={{ textField: { fullWidth: true, size: "small" } }}
-            />
-          </Stack>
-        }
       />
 
       {isLoading ? (
@@ -153,6 +107,7 @@ export default function AdminReportesView() {
         reportes.map((reporte) => {
           const estatusId = getSelectId(reporte[FIELDS.REPORTES.ESTATUS]);
           const cerrado = isReporteCerrado(reporte);
+          const tieneMantenimiento = reportHasMantenimiento(reporte);
           const imagenes = reporte[FIELDS.REPORTES.IMAGENES] ?? [];
           const hierarchy = resolveReporteHierarchy(
             reporte,
@@ -284,7 +239,7 @@ export default function AdminReportesView() {
                     >
                       {cerrado ? "Reabrir reporte" : "Cerrar reporte"}
                     </Button>
-                    {!cerrado && (
+                    {!cerrado && !tieneMantenimiento && (
                       <Button
                         size="small"
                         variant="contained"
@@ -294,6 +249,11 @@ export default function AdminReportesView() {
                       >
                         Crear mant. correctivo
                       </Button>
+                    )}
+                    {tieneMantenimiento && (
+                      <Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
+                        Ya tiene mantenimiento correctivo vinculado
+                      </Typography>
                     )}
                   </Stack>
                 </Stack>

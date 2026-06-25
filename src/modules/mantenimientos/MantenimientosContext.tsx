@@ -34,6 +34,7 @@ import {
   MantenimientoCorrectivo,
   MantenimientoPreventivo,
   Proyecto,
+  Reporte,
   Tipo,
 } from "@/lib/baserow/types";
 import { getLinkIds } from "@/lib/baserow/utils";
@@ -46,6 +47,7 @@ import {
   defaultMantPreventivoValues,
   MantCorrectivoFormValues,
   MantenimientoTipo,
+  MantPreventivoFollowUpFormValues,
   MantPreventivoFormValues,
 } from "./schemas";
 
@@ -63,10 +65,14 @@ interface MantenimientosContextValue {
   error: string | null;
   dialogOpen: boolean;
   editingId: number | null;
+  followUpParentId: number | null;
+  reportesById: Map<number, Reporte>;
   openCreate: () => void;
   openEdit: (row: MantenimientoPreventivo | MantenimientoCorrectivo) => void;
+  openFollowUp: (row: MantenimientoPreventivo) => void;
   closeDialog: () => void;
   savePreventivo: (values: MantPreventivoFormValues) => Promise<void>;
+  savePreventivoFollowUp: (values: MantPreventivoFollowUpFormValues) => Promise<void>;
   saveCorrectivo: (values: MantCorrectivoFormValues) => Promise<void>;
   deleteRow: (row: MantenimientoPreventivo | MantenimientoCorrectivo) => Promise<void>;
   isSaving: boolean;
@@ -87,6 +93,7 @@ export function MantenimientosProvider({
   const { condominioId } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [followUpParentId, setFollowUpParentId] = useState<number | null>(null);
   const [hierarchyFilters, setHierarchyFilters] = useState(
     defaultProyectoHierarchyFilters
   );
@@ -125,6 +132,28 @@ export function MantenimientosProvider({
       fetchTable<MantenimientoPreventivo | MantenimientoCorrectivo>(tableKey),
     enabled: !!condominioId,
   });
+
+  const reportesFilter = condominioId
+    ? buildCondominioFilter(condominioId, FIELDS.REPORTES.CONDOMINIO)
+    : undefined;
+
+  const { data: reportesData } = useQuery({
+    queryKey: ["reportes-mant", condominioId],
+    queryFn: () =>
+      fetchTable<Reporte>(
+        "reportes",
+        reportesFilter ? { filters: reportesFilter } : undefined
+      ),
+    enabled: !!condominioId && tipo === "correctivo",
+  });
+
+  const reportesById = useMemo(() => {
+    const map = new Map<number, Reporte>();
+    for (const row of reportesData?.results ?? []) {
+      map.set(row.id, row);
+    }
+    return map;
+  }, [reportesData]);
 
   const rows = useMemo(() => {
     const all = data?.results ?? [];
@@ -177,7 +206,12 @@ export function MantenimientosProvider({
         [FIELDS.MANT_PREVENTIVOS.ULTIMO]: values.ultimo || null,
         [FIELDS.MANT_PREVENTIVOS.SIGUIENTE]: values.siguiente || null,
         ...(values.proyectoId
-          ? { [FIELDS.MANT_PREVENTIVOS.PROYECTO]: [values.proyectoId] }
+          ? { [FIELDS.MANT_PREVENTIVOS.PROYECTO]: values.proyectoId }
+          : {}),
+        ...(editingId
+          ? {
+              [FIELDS.MANT_PREVENTIVOS.APLICADO_EL]: values.aplicadoEl || null,
+            }
           : {}),
       };
       if (editingId) await updateTableRow("mant-preventivos", editingId, payload);
@@ -189,6 +223,34 @@ export function MantenimientosProvider({
       queryClient.invalidateQueries({ queryKey: ["mant-preventivos"] });
       setDialogOpen(false);
       setEditingId(null);
+      setFollowUpParentId(null);
+    },
+  });
+
+  const savePreventivoFollowUpMutation = useMutation({
+    mutationFn: async (values: MantPreventivoFollowUpFormValues) => {
+      if (!followUpParentId) throw new Error("Registro padre no encontrado");
+      const parent = (data?.results ?? []).find(
+        (row) => row.id === followUpParentId
+      ) as MantenimientoPreventivo | undefined;
+      if (!parent) throw new Error("Registro padre no encontrado");
+
+      const fechaAplicada =
+        parent[FIELDS.MANT_PREVENTIVOS.SIGUIENTE]?.slice(0, 10) ?? null;
+      const proyectoId = getLinkIds(parent[FIELDS.MANT_PREVENTIVOS.PROYECTO])[0];
+
+      await createTableRow("mant-preventivos", {
+        [FIELDS.MANT_PREVENTIVOS.ULTIMO]: fechaAplicada,
+        [FIELDS.MANT_PREVENTIVOS.SIGUIENTE]: values.siguiente || null,
+        [FIELDS.MANT_PREVENTIVOS.MANTENIMIENTO_ANTERIOR]: parent.id,
+        ...(proyectoId ? { [FIELDS.MANT_PREVENTIVOS.PROYECTO]: proyectoId } : {}),
+      });
+    },
+    onSuccess: () => {
+      showCreateSuccess("El seguimiento de mantenimiento preventivo");
+      queryClient.invalidateQueries({ queryKey: ["mant-preventivos"] });
+      setDialogOpen(false);
+      setFollowUpParentId(null);
     },
   });
 
@@ -200,11 +262,8 @@ export function MantenimientosProvider({
         [FIELDS.MANT_CORRECTIVOS.EJERCIDO]: values.ejercido || null,
         [FIELDS.MANT_CORRECTIVOS.FECHA_REPORTE]: values.fechaReporte || null,
         [FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]: values.fechaCorreccion || null,
-        ...(editingId
-          ? { [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: values.descripcion || null }
-          : values.descripcion
-            ? { [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: values.descripcion }
-            : {}),
+        [FIELDS.MANT_CORRECTIVOS.DESCRIPCION]: values.descripcion || null,
+        [FIELDS.MANT_CORRECTIVOS.NOTAS]: values.notas || null,
         ...(values.proyectoId
           ? { [FIELDS.MANT_CORRECTIVOS.PROYECTO]: values.proyectoId }
           : {}),
@@ -229,20 +288,29 @@ export function MantenimientosProvider({
 
   const openCreate = useCallback(() => {
     setEditingId(null);
+    setFollowUpParentId(null);
     setDialogOpen(true);
   }, []);
 
   const openEdit = useCallback(
     (row: MantenimientoPreventivo | MantenimientoCorrectivo) => {
       setEditingId(row.id);
+      setFollowUpParentId(null);
       setDialogOpen(true);
     },
     []
   );
 
+  const openFollowUp = useCallback((row: MantenimientoPreventivo) => {
+    setEditingId(null);
+    setFollowUpParentId(row.id);
+    setDialogOpen(true);
+  }, []);
+
   const closeDialog = useCallback(() => {
     setDialogOpen(false);
     setEditingId(null);
+    setFollowUpParentId(null);
   }, []);
 
   const value = useMemo(
@@ -260,11 +328,16 @@ export function MantenimientosProvider({
       error: error ? "Error al cargar datos" : null,
       dialogOpen,
       editingId,
+      followUpParentId,
+      reportesById,
       openCreate,
       openEdit,
+      openFollowUp,
       closeDialog,
       savePreventivo: (values: MantPreventivoFormValues) =>
         savePreventivoMutation.mutateAsync(values).then(() => undefined),
+      savePreventivoFollowUp: (values: MantPreventivoFollowUpFormValues) =>
+        savePreventivoFollowUpMutation.mutateAsync(values).then(() => undefined),
       saveCorrectivo: (values: MantCorrectivoFormValues) =>
         saveCorrectivoMutation.mutateAsync(values).then(() => undefined),
       deleteRow: (row: MantenimientoPreventivo | MantenimientoCorrectivo) =>
@@ -284,10 +357,14 @@ export function MantenimientosProvider({
       error,
       dialogOpen,
       editingId,
+      followUpParentId,
+      reportesById,
       openCreate,
       openEdit,
+      openFollowUp,
       closeDialog,
       savePreventivoMutation,
+      savePreventivoFollowUpMutation,
       saveCorrectivoMutation,
       deleteMutation,
     ]
@@ -314,9 +391,10 @@ export function getPreventivoEditValues(
   return {
     ultimo: row[FIELDS.MANT_PREVENTIVOS.ULTIMO]?.slice(0, 10) ?? "",
     siguiente: row[FIELDS.MANT_PREVENTIVOS.SIGUIENTE]?.slice(0, 10) ?? "",
+    aplicadoEl: row[FIELDS.MANT_PREVENTIVOS.APLICADO_EL]?.slice(0, 10) ?? "",
     tipoId: null,
     agrupadorId: null,
-    proyectoId: row[FIELDS.MANT_PREVENTIVOS.PROYECTO]?.[0]?.id ?? null,
+    proyectoId: getLinkIds(row[FIELDS.MANT_PREVENTIVOS.PROYECTO])[0] ?? null,
   };
 }
 
@@ -330,10 +408,24 @@ export function getCorrectivoEditValues(
     fechaCorreccion:
       row[FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]?.slice(0, 10) ?? "",
     descripcion: row[FIELDS.MANT_CORRECTIVOS.DESCRIPCION] ?? "",
+    notas: row[FIELDS.MANT_CORRECTIVOS.NOTAS] ?? "",
     tipoId: null,
     agrupadorId: null,
     proyectoId: getLinkIds(row[FIELDS.MANT_CORRECTIVOS.PROYECTO])[0] ?? null,
   };
+}
+
+export function getCorrectivoDisplayDescription(
+  row: MantenimientoCorrectivo,
+  reportesById: Map<number, Reporte>
+): string {
+  const reporteIds = getLinkIds(row[FIELDS.MANT_CORRECTIVOS.REPORTES]);
+  for (const reporteId of reporteIds) {
+    const reporte = reportesById.get(reporteId);
+    const descripcion = reporte?.[FIELDS.REPORTES.DESCRIPCION]?.trim();
+    if (descripcion) return descripcion;
+  }
+  return row[FIELDS.MANT_CORRECTIVOS.DESCRIPCION]?.trim() || "—";
 }
 
 export { defaultMantCorrectivoValues, defaultMantPreventivoValues };

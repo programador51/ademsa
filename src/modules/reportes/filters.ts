@@ -13,6 +13,8 @@ export interface AdminReportesFilters extends ProyectoHierarchyFilters {
   fechaHasta: string;
 }
 
+export type ReportesFilters = AdminReportesFilters;
+
 export const defaultAdminReportesFilters: AdminReportesFilters = {
   ...defaultProyectoHierarchyFilters,
   estatus: "",
@@ -100,6 +102,10 @@ export function reportMatchesAdminFilters(
   }
 
   return true;
+}
+
+export function reportHasMantenimiento(reporte: Reporte): boolean {
+  return getLinkIds(reporte[FIELDS.REPORTES.MANTENIMIENTO]).length > 0;
 }
 
 export { REPORTE_ESTATUS };

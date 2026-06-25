@@ -21,10 +21,20 @@ import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS } from "@/lib/baserow/constants";
 import { Reporte } from "@/lib/baserow/types";
 import { getLinkIds } from "@/lib/baserow/utils";
+import {
+  AdminReportesFilters,
+  defaultAdminReportesFilters,
+  reportMatchesAdminFilters,
+} from "./filters";
 import { ReporteFormValues } from "./schemas";
 
 interface ReportesContextValue {
   reportes: Reporte[];
+  filters: AdminReportesFilters;
+  setFilters: (filters: AdminReportesFilters) => void;
+  tipos: ReturnType<typeof useServiciosHierarchyData>["tipos"];
+  agrupadores: ReturnType<typeof useServiciosHierarchyData>["agrupadores"];
+  proyectos: ReturnType<typeof useServiciosHierarchyData>["proyectos"];
   isLoading: boolean;
   dialogOpen: boolean;
   openDialog: () => void;
@@ -41,27 +51,43 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { condominioId, user } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filters, setFilters] = useState(defaultAdminReportesFilters);
 
-  const filters = condominioId
+  const apiFilters = condominioId
     ? buildCondominioFilter(condominioId, FIELDS.REPORTES.CONDOMINIO)
     : undefined;
 
-  const { proyectos } = useServiciosHierarchyData(condominioId);
+  const { tipos, agrupadores, proyectos } = useServiciosHierarchyData(condominioId);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reportes", condominioId],
     queryFn: () =>
-      fetchTable<Reporte>("reportes", filters ? { filters } : undefined),
+      fetchTable<Reporte>("reportes", apiFilters ? { filters: apiFilters } : undefined),
     enabled: !!condominioId,
   });
 
   const reportes = useMemo(() => {
     const all = data?.results ?? [];
     if (!condominioId) return [];
-    return all.filter((row) =>
-      rowBelongsToCondominio(row[FIELDS.REPORTES.CONDOMINIO], condominioId)
-    );
-  }, [data, condominioId]);
+    return all
+      .filter((row) =>
+        rowBelongsToCondominio(row[FIELDS.REPORTES.CONDOMINIO], condominioId)
+      )
+      .filter((row) => {
+        if (user?.id) {
+          const reportadoPor = getLinkIds(row[FIELDS.REPORTES.REPORTADO_POR])[0];
+          if (reportadoPor !== user.id) return false;
+        }
+        return reportMatchesAdminFilters(
+          row,
+          filters,
+          agrupadores,
+          proyectos,
+          tipos,
+          condominioId
+        );
+      });
+  }, [data, condominioId, user?.id, filters, agrupadores, proyectos, tipos]);
 
   const createMutation = useMutation({
     mutationFn: async ({
@@ -102,6 +128,11 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       reportes,
+      filters,
+      setFilters,
+      tipos,
+      agrupadores,
+      proyectos,
       isLoading,
       dialogOpen,
       openDialog: () => setDialogOpen(true),
@@ -110,7 +141,7 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
         createMutation.mutateAsync(input).then(() => undefined),
       isCreating: createMutation.isPending,
     }),
-    [reportes, isLoading, dialogOpen, createMutation]
+    [reportes, filters, tipos, agrupadores, proyectos, isLoading, dialogOpen, createMutation]
   );
 
   return (

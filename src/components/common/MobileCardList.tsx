@@ -30,6 +30,7 @@ interface MobileCardListProps<T extends { id: number }> {
   onDelete?: (row: T) => void;
   deleteLabel?: string | ((row: T) => string);
   headerAction?: ReactNode;
+  renderRowActions?: (row: T) => ReactNode;
 }
 
 export default function MobileCardList<T extends { id: number }>({
@@ -42,6 +43,7 @@ export default function MobileCardList<T extends { id: number }>({
   onDelete,
   deleteLabel,
   headerAction,
+  renderRowActions,
 }: MobileCardListProps<T>) {
   const primaryCol = columns.find((c) => c.primary) ?? columns[0];
 
@@ -106,6 +108,7 @@ export default function MobileCardList<T extends { id: number }>({
                       </Typography>
                     </Box>
                   ))}
+                {renderRowActions?.(row)}
               </Stack>
             </CardContent>
           </Card>
