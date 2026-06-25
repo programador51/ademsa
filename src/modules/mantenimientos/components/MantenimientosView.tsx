@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Alert, Button, MenuItem, Stack, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import HistoryIcon from "@mui/icons-material/History";
 import MobileCardList from "@/components/common/MobileCardList";
 import ProyectoHierarchyFiltersBar from "@/components/filters/ProyectoHierarchyFiltersBar";
 import { useApp } from "@/contexts/AppContext";
+import { confirmCloseCorrectivoTicket } from "@/lib/ui/alerts";
 import { resolveProyectoHierarchy } from "@/lib/baserow/proyectoHierarchyUtils";
 import { formatDateTime, formatFolio, formatMoney } from "@/lib/formatters";
 import { FIELDS, MANT_CORRECTIVO_ESTATUS, ROLES } from "@/lib/baserow/constants";
@@ -14,12 +17,16 @@ import {
 } from "@/lib/baserow/types";
 import {
   getCorrectivoDisplayDescription,
+  hasPreventivoAnterior,
+  isCorrectivoCerrado,
   useMantenimientos,
 } from "../MantenimientosContext";
 import MantenimientoFormDialog from "./MantenimientoFormDialog";
+import PreventivoSeguimientoDialog from "./PreventivoSeguimientoDialog";
 
 export default function MantenimientosView() {
   const { user } = useApp();
+  const [seguimientoRowId, setSeguimientoRowId] = useState<number | null>(null);
   const {
     tipo,
     rows,
@@ -29,6 +36,8 @@ export default function MantenimientosView() {
     openEdit,
     openFollowUp,
     deleteRow,
+    closeCorrectivoTicket,
+    isClosingCorrectivo,
     hierarchyFilters,
     setHierarchyFilters,
     correctivoFilters,
@@ -37,6 +46,7 @@ export default function MantenimientosView() {
     agrupadores,
     proyectos,
     reportesById,
+    preventivosById,
   } = useMantenimientos();
 
   if (user?.rol !== ROLES.ADMINISTRADOR) {
@@ -48,6 +58,15 @@ export default function MantenimientosView() {
       | MantenimientoPreventivo[typeof FIELDS.MANT_PREVENTIVOS.PROYECTO]
       | MantenimientoCorrectivo[typeof FIELDS.MANT_CORRECTIVOS.PROYECTO]
   ) => resolveProyectoHierarchy(link, agrupadores, proyectos, tipos);
+
+  const handleCloseCorrectivoTicket = async (row: MantenimientoCorrectivo) => {
+    const folio = formatFolio(row[FIELDS.MANT_CORRECTIVOS.FOLIO]);
+    const confirmed = await confirmCloseCorrectivoTicket(
+      `el ticket folio ${folio}`
+    );
+    if (!confirmed) return;
+    await closeCorrectivoTicket(row);
+  };
 
   const title =
     tipo === "preventivo"
@@ -79,14 +98,28 @@ export default function MantenimientosView() {
             </Button>
           }
           renderRowActions={(row) => (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => openFollowUp(row)}
-            >
-              Agregar
-            </Button>
+            <Stack spacing={1}>
+              {hasPreventivoAnterior(row) && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<HistoryIcon />}
+                  onClick={() => setSeguimientoRowId(row.id)}
+                >
+                  Consultar seguimiento
+                </Button>
+              )}
+              <Button
+                size="small"
+                variant="outlined"
+                fullWidth
+                startIcon={<AddIcon />}
+                onClick={() => openFollowUp(row)}
+              >
+                Agregar
+              </Button>
+            </Stack>
           )}
           columns={[
             {
@@ -140,6 +173,15 @@ export default function MantenimientosView() {
           ]}
         />
         {error && <Alert severity="error">{error}</Alert>}
+        <PreventivoSeguimientoDialog
+          open={seguimientoRowId != null}
+          rowId={seguimientoRowId}
+          onClose={() => setSeguimientoRowId(null)}
+          preventivosById={preventivosById}
+          tipos={tipos}
+          agrupadores={agrupadores}
+          proyectos={proyectos}
+        />
         <MantenimientoFormDialog />
       </Stack>
     );
@@ -191,6 +233,19 @@ export default function MantenimientosView() {
           <Button size="small" startIcon={<AddIcon />} onClick={openCreate}>
             Nuevo
           </Button>
+        }
+        renderRowActions={(row) =>
+          !isCorrectivoCerrado(row) ? (
+            <Button
+              size="small"
+              variant="contained"
+              fullWidth
+              onClick={() => void handleCloseCorrectivoTicket(row)}
+              disabled={isClosingCorrectivo}
+            >
+              Cerrar ticket
+            </Button>
+          ) : null
         }
         columns={[
           {

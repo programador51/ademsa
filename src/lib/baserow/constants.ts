@@ -124,8 +124,8 @@ export const REPORTE_ESTATUS = {
 } as const;
 
 export const REPORTE_ESTATUS_LABELS: Record<number, string> = {
-  [REPORTE_ESTATUS.ABIERTA]: "Abierta",
-  [REPORTE_ESTATUS.CERRADA]: "Cerrada",
+  [REPORTE_ESTATUS.ABIERTA]: "Abierto",
+  [REPORTE_ESTATUS.CERRADA]: "Cerrado",
 };
 
 export const ROLE_LABELS: Record<number, string> = {

@@ -17,7 +17,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import ReportesFiltersBar from "@/components/filters/ReportesFiltersBar";
 import { useApp } from "@/contexts/AppContext";
-import { formatDateTime } from "@/lib/formatters";
+import { formatDateTime, formatFolio } from "@/lib/formatters";
 import {
   FIELDS,
   REPORTE_ESTATUS,
@@ -25,7 +25,7 @@ import {
   ROLES,
 } from "@/lib/baserow/constants";
 import { BaserowFile, Reporte } from "@/lib/baserow/types";
-import { getLinkLabel, getSelectId } from "@/lib/baserow/utils";
+import { getLinkIds, getLinkLabel, getSelectId } from "@/lib/baserow/utils";
 import Swal from "sweetalert2";
 import { reportHasMantenimiento, resolveReporteHierarchy } from "../filters";
 import {
@@ -55,11 +55,13 @@ export default function AdminReportesView() {
 
   const handleToggleStatus = async (reporte: Reporte) => {
     const cerrado = isReporteCerrado(reporte);
+    const mantenimientoId = getLinkIds(reporte[FIELDS.REPORTES.MANTENIMIENTO])[0] ?? null;
     if (cerrado) {
       await updateReporte({
         id: reporte.id,
         estatus: REPORTE_ESTATUS.ABIERTA,
         fechaCierre: null,
+        mantenimientoId,
       });
       return;
     }
@@ -67,6 +69,7 @@ export default function AdminReportesView() {
       id: reporte.id,
       estatus: REPORTE_ESTATUS.CERRADA,
       fechaCierre: new Date().toISOString(),
+      mantenimientoId,
     });
   };
 
@@ -120,6 +123,9 @@ export default function AdminReportesView() {
             <Card key={reporte.id} variant="outlined">
               <CardContent sx={{ "&:last-child": { pb: 2 } }}>
                 <Stack spacing={1.5}>
+                  <Typography variant="caption" color="text.secondary">
+                    Folio {formatFolio(reporte.id)}
+                  </Typography>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                     {reporte[FIELDS.REPORTES.DESCRIPCION]}
                   </Typography>
@@ -179,6 +185,9 @@ export default function AdminReportesView() {
                             ? reporte[FIELDS.REPORTES.FECHA_CIERRE] ??
                               new Date().toISOString()
                             : null,
+                        mantenimientoId:
+                          getLinkIds(reporte[FIELDS.REPORTES.MANTENIMIENTO])[0] ??
+                          null,
                       });
                     }}
                     size="small"
@@ -206,6 +215,9 @@ export default function AdminReportesView() {
                         id: reporte.id,
                         estatus: REPORTE_ESTATUS.CERRADA,
                         fechaCierre: date.toISOString(),
+                        mantenimientoId:
+                          getLinkIds(reporte[FIELDS.REPORTES.MANTENIMIENTO])[0] ??
+                          null,
                       });
                     }}
                     slotProps={{

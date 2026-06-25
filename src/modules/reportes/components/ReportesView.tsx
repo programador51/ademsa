@@ -19,7 +19,7 @@ import { ProyectoHierarchyFields } from "@/components/forms/ProyectoHierarchyFie
 import { FormTextField } from "@/components/forms/FormTextField";
 import { useApp } from "@/contexts/AppContext";
 import { FIELDS, REPORTE_ESTATUS_LABELS } from "@/lib/baserow/constants";
-import { formatDateTime } from "@/lib/formatters";
+import { formatDateTime, formatFolio } from "@/lib/formatters";
 import { getSelectId } from "@/lib/baserow/utils";
 import { resolveReporteHierarchy } from "../filters";
 import {
@@ -80,6 +80,11 @@ export default function ReportesView() {
         rows={reportes}
         loading={isLoading}
         columns={[
+          {
+            id: "folio",
+            label: "Folio",
+            render: (row) => formatFolio(row.id),
+          },
           {
             id: FIELDS.REPORTES.DESCRIPCION,
             label: "Descripción",

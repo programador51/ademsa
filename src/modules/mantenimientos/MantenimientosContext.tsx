@@ -28,7 +28,7 @@ import {
   rowMatchesHierarchyFilters,
 } from "@/lib/baserow/proyectoHierarchyUtils";
 import { showCreateSuccess } from "@/lib/ui/alerts";
-import { FIELDS } from "@/lib/baserow/constants";
+import { FIELDS, REPORTE_ESTATUS } from "@/lib/baserow/constants";
 import {
   Agrupador,
   MantenimientoCorrectivo,
@@ -67,6 +67,7 @@ interface MantenimientosContextValue {
   editingId: number | null;
   followUpParentId: number | null;
   reportesById: Map<number, Reporte>;
+  preventivosById: Map<number, MantenimientoPreventivo>;
   openCreate: () => void;
   openEdit: (row: MantenimientoPreventivo | MantenimientoCorrectivo) => void;
   openFollowUp: (row: MantenimientoPreventivo) => void;
@@ -74,8 +75,10 @@ interface MantenimientosContextValue {
   savePreventivo: (values: MantPreventivoFormValues) => Promise<void>;
   savePreventivoFollowUp: (values: MantPreventivoFollowUpFormValues) => Promise<void>;
   saveCorrectivo: (values: MantCorrectivoFormValues) => Promise<void>;
+  closeCorrectivoTicket: (row: MantenimientoCorrectivo) => Promise<void>;
   deleteRow: (row: MantenimientoPreventivo | MantenimientoCorrectivo) => Promise<void>;
   isSaving: boolean;
+  isClosingCorrectivo: boolean;
 }
 
 const MantenimientosContext = createContext<MantenimientosContextValue | undefined>(
@@ -140,6 +143,15 @@ export function MantenimientosProvider({
     }
     return map;
   }, [reportesData]);
+
+  const preventivosById = useMemo(() => {
+    const map = new Map<number, MantenimientoPreventivo>();
+    if (tipo !== "preventivo") return map;
+    for (const row of data?.results ?? []) {
+      map.set(row.id, row as MantenimientoPreventivo);
+    }
+    return map;
+  }, [data, tipo]);
 
   const rows = useMemo(() => {
     const all = data?.results ?? [];
@@ -272,6 +284,35 @@ export function MantenimientosProvider({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [queryKey] }),
   });
 
+  const closeCorrectivoMutation = useMutation({
+    mutationFn: async (row: MantenimientoCorrectivo) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const fechaCierreReporte = new Date().toISOString();
+
+      await updateTableRow("mant-correctivos", row.id, {
+        [FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]: today,
+      });
+
+      const reporteIds = getLinkIds(row[FIELDS.MANT_CORRECTIVOS.REPORTES]);
+      if (reporteIds.length > 0) {
+        await Promise.all(
+          reporteIds.map((reporteId) =>
+            updateTableRow("reportes", reporteId, {
+              [FIELDS.REPORTES.ESTATUS]: REPORTE_ESTATUS.CERRADA,
+              [FIELDS.REPORTES.FECHA_CIERRE]: fechaCierreReporte,
+            })
+          )
+        );
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mant-correctivos"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reportes"] });
+      queryClient.invalidateQueries({ queryKey: ["reportes"] });
+      queryClient.invalidateQueries({ queryKey: ["reportes-mant", condominioId] });
+    },
+  });
+
   const openCreate = useCallback(() => {
     setEditingId(null);
     setFollowUpParentId(null);
@@ -316,6 +357,7 @@ export function MantenimientosProvider({
       editingId,
       followUpParentId,
       reportesById,
+      preventivosById,
       openCreate,
       openEdit,
       openFollowUp,
@@ -326,10 +368,13 @@ export function MantenimientosProvider({
         savePreventivoFollowUpMutation.mutateAsync(values).then(() => undefined),
       saveCorrectivo: (values: MantCorrectivoFormValues) =>
         saveCorrectivoMutation.mutateAsync(values).then(() => undefined),
+      closeCorrectivoTicket: (row: MantenimientoCorrectivo) =>
+        closeCorrectivoMutation.mutateAsync(row).then(() => undefined),
       deleteRow: (row: MantenimientoPreventivo | MantenimientoCorrectivo) =>
         deleteMutation.mutateAsync(row).then(() => undefined),
       isSaving:
         savePreventivoMutation.isPending || saveCorrectivoMutation.isPending,
+      isClosingCorrectivo: closeCorrectivoMutation.isPending,
     }),
     [
       tipo,
@@ -345,6 +390,7 @@ export function MantenimientosProvider({
       editingId,
       followUpParentId,
       reportesById,
+      preventivosById,
       openCreate,
       openEdit,
       openFollowUp,
@@ -352,6 +398,7 @@ export function MantenimientosProvider({
       savePreventivoMutation,
       savePreventivoFollowUpMutation,
       saveCorrectivoMutation,
+      closeCorrectivoMutation,
       deleteMutation,
     ]
   );
@@ -369,6 +416,17 @@ export function useMantenimientos() {
     throw new Error("useMantenimientos debe usarse dentro de MantenimientosProvider");
   }
   return ctx;
+}
+
+export function getPreventivoAnteriorId(
+  row: MantenimientoPreventivo
+): number | null {
+  const ids = getLinkIds(row[FIELDS.MANT_PREVENTIVOS.MANTENIMIENTO_ANTERIOR]);
+  return ids[0] ?? null;
+}
+
+export function hasPreventivoAnterior(row: MantenimientoPreventivo): boolean {
+  return getPreventivoAnteriorId(row) != null;
 }
 
 export function getPreventivoEditValues(
@@ -412,6 +470,10 @@ export function getCorrectivoDisplayDescription(
     if (descripcion) return descripcion;
   }
   return row[FIELDS.MANT_CORRECTIVOS.DESCRIPCION]?.trim() || "—";
+}
+
+export function isCorrectivoCerrado(row: MantenimientoCorrectivo): boolean {
+  return !!row[FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION];
 }
 
 export { defaultMantCorrectivoValues, defaultMantPreventivoValues };

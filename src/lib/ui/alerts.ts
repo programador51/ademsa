@@ -16,6 +16,21 @@ export async function confirmDelete(
   return result.isConfirmed;
 }
 
+export async function confirmCloseCorrectivoTicket(
+  folioLabel = "este ticket"
+): Promise<boolean> {
+  const result = await Swal.fire({
+    title: "¿Cerrar ticket?",
+    text: `¿Confirmas cerrar ${folioLabel}? Se registrará la fecha de corrección de hoy y, si tiene reporte vinculado, también se cerrará.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, actualizar",
+    cancelButtonText: "Cancelar",
+    reverseButtons: true,
+  });
+  return result.isConfirmed;
+}
+
 export function showCreateSuccess(entityLabel = "El registro"): void {
   void Swal.fire({
     title: "¡Éxito!",

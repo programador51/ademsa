@@ -43,6 +43,7 @@ interface AdminReportesContextValue {
     id: number;
     estatus: number;
     fechaCierre?: string | null;
+    mantenimientoId?: number | null;
   }) => Promise<void>;
   createCorrectivoFromReporte: (reporte: Reporte) => Promise<void>;
   isUpdating: boolean;
@@ -111,20 +112,36 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
       id,
       estatus,
       fechaCierre,
+      mantenimientoId,
     }: {
       id: number;
       estatus: number;
       fechaCierre?: string | null;
+      mantenimientoId?: number | null;
     }) => {
+      const fechaCierreValue =
+        estatus === REPORTE_ESTATUS.CERRADA ? fechaCierre || null : null;
+
       await updateTableRow("reportes", id, {
         [FIELDS.REPORTES.ESTATUS]: estatus,
-        [FIELDS.REPORTES.FECHA_CIERRE]:
-          estatus === REPORTE_ESTATUS.CERRADA ? fechaCierre || null : null,
+        [FIELDS.REPORTES.FECHA_CIERRE]: fechaCierreValue,
       });
+
+      if (
+        estatus === REPORTE_ESTATUS.CERRADA &&
+        mantenimientoId &&
+        fechaCierreValue
+      ) {
+        await updateTableRow("mant-correctivos", mantenimientoId, {
+          [FIELDS.MANT_CORRECTIVOS.FECHA_CORRECCION]:
+            fechaCierreValue.slice(0, 10),
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-reportes", condominioId] });
       queryClient.invalidateQueries({ queryKey: ["reportes", condominioId] });
+      queryClient.invalidateQueries({ queryKey: ["mant-correctivos"] });
     },
   });
 
@@ -166,8 +183,12 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
   });
 
   const updateReporte = useCallback(
-    (input: { id: number; estatus: number; fechaCierre?: string | null }) =>
-      updateMutation.mutateAsync(input).then(() => undefined),
+    (input: {
+      id: number;
+      estatus: number;
+      fechaCierre?: string | null;
+      mantenimientoId?: number | null;
+    }) => updateMutation.mutateAsync(input).then(() => undefined),
     [updateMutation]
   );
 
