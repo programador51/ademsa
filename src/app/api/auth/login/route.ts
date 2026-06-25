@@ -2,29 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateUser } from "@/lib/auth/login";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 
+const AUTH_ERROR_MESSAGES = {
+  not_found: "Credenciales inválidas",
+  password_required: "Este usuario requiere contraseña",
+  invalid_password: "Credenciales inválidas",
+} as const;
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
-    if (!email || !password) {
+    if (!email?.trim()) {
       return NextResponse.json(
-        { error: "Email y contraseña son requeridos" },
+        { error: "El correo es requerido" },
         { status: 400 }
       );
     }
 
-    const user = await authenticateUser(email, password);
-    if (!user) {
+    const result = await authenticateUser(email, password ?? "");
+    if (!result.ok) {
       return NextResponse.json(
-        { error: "Credenciales inválidas" },
+        { error: AUTH_ERROR_MESSAGES[result.reason] },
         { status: 401 }
       );
     }
 
-    const token = await createSessionToken(user);
+    const token = await createSessionToken(result.user);
     await setSessionCookie(token);
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ user: result.user });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

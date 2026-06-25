@@ -67,21 +67,39 @@ export function mapUsuarioToSession(user: Usuario): SessionUser | null {
   };
 }
 
+export function userHasPassword(user: Usuario): boolean {
+  return user[FIELDS.USUARIOS.CONTRASENA] === true;
+}
+
+export type AuthenticateResult =
+  | { ok: true; user: SessionUser }
+  | { ok: false; reason: "not_found" | "password_required" | "invalid_password" };
+
 export async function authenticateUser(
   email: string,
   password: string
-): Promise<SessionUser | null> {
+): Promise<AuthenticateResult> {
   const user = await findUserByEmail(email);
-  if (!user) return null;
+  if (!user) return { ok: false, reason: "not_found" };
 
   const trimmedPassword = password.trim();
+  const hasPassword = userHasPassword(user);
+
+  if (!hasPassword) {
+    const sessionUser = mapUsuarioToSession(user);
+    if (!sessionUser) return { ok: false, reason: "not_found" };
+    return { ok: true, user: sessionUser };
+  }
 
   if (!trimmedPassword) {
-    return mapUsuarioToSession(user);
+    return { ok: false, reason: "password_required" };
   }
 
   const valid = await verifyUserPassword(user.id, trimmedPassword);
-  if (!valid) return null;
+  if (!valid) return { ok: false, reason: "invalid_password" };
 
-  return mapUsuarioToSession(user);
+  const sessionUser = mapUsuarioToSession(user);
+  if (!sessionUser) return { ok: false, reason: "not_found" };
+
+  return { ok: true, user: sessionUser };
 }

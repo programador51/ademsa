@@ -109,6 +109,7 @@ export default function LoginPage() {
                 label="Correo electrónico"
                 type="email"
                 autoComplete="email"
+                required
               />
               <FormTextField
                 name="password"
