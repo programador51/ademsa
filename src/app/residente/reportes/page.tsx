@@ -48,7 +48,7 @@ export default function ReportesPage() {
   return (
     <Suspense
       fallback={
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack sx={{ py: 4 , alignItems:'center' }}>
           <CircularProgress size={28} />
         </Stack>
       }
