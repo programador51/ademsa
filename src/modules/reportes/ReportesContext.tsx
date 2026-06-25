@@ -16,7 +16,6 @@ import {
   fetchTable,
   uploadFile,
 } from "@/lib/api/data";
-import { rowBelongsToCondominio } from "@/lib/baserow/condominioFilters";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS } from "@/lib/baserow/constants";
 import { Reporte } from "@/lib/baserow/types";
@@ -70,21 +69,17 @@ export function ReportesProvider({ children }: { children: ReactNode }) {
     const all = data?.results ?? [];
     if (!condominioId) return [];
     return all
-      .filter((row) =>
-        rowBelongsToCondominio(row[FIELDS.REPORTES.CONDOMINIO], condominioId)
-      )
       .filter((row) => {
         if (user?.id) {
           const reportadoPor = getLinkIds(row[FIELDS.REPORTES.REPORTADO_POR])[0];
-          if (reportadoPor !== user.id) return false;
+          if (reportadoPor !== Number(user.id)) return false;
         }
         return reportMatchesAdminFilters(
           row,
           filters,
           agrupadores,
           proyectos,
-          tipos,
-          condominioId
+          tipos
         );
       });
   }, [data, condominioId, user?.id, filters, agrupadores, proyectos, tipos]);

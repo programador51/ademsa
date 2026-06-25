@@ -49,7 +49,7 @@ export default function ProyectoHierarchyFilterAutocomplete({
       size="small"
       label={label}
       placeholder={placeholder}
-      helperText="Filtra por servicio. Muestra tipo y agrupador en la lista."
+      helperText="Filtra por nombre del servicio (N3), agrupador (N2) o tipo (N1)."
       onChange={(option) => {
         if (!option) {
           onChange({

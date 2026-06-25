@@ -7,7 +7,9 @@ import {
   TextFieldProps,
   Typography,
 } from "@mui/material";
+import { useMemo } from "react";
 import {
+  createProyectoHierarchyFuse,
   filterProyectoHierarchyOptions,
   ProyectoHierarchyOption,
 } from "@/lib/baserow/proyectoHierarchyOptions";
@@ -33,14 +35,16 @@ export function ProyectoHierarchyAutocompleteField({
   onChange,
   onBlur,
   label = "Servicio (Nivel 3)",
-  placeholder = "Escribe para buscar por servicio, tipo o agrupador",
-  helperText = "Busca por nombre del servicio, tipo (nivel 1) o agrupador (nivel 2)",
+  placeholder = "Escribe para buscar por servicio, agrupador o tipo",
+  helperText = "Coincidencia parcial por nombre: primero nivel 3, luego 2 y 1",
   error = false,
   required = false,
   disabled = false,
   size = "medium",
   loading = false,
 }: ProyectoHierarchyAutocompleteFieldProps) {
+  const fuse = useMemo(() => createProyectoHierarchyFuse(options), [options]);
+
   return (
     <Autocomplete<ProyectoHierarchyOption, false, false, false>
       disabled={disabled || options.length === 0}
@@ -50,18 +54,24 @@ export function ProyectoHierarchyAutocompleteField({
       onChange={(_, option) => onChange(option)}
       onBlur={onBlur}
       getOptionLabel={(option) => option.proyectoNombre}
+      getOptionKey={(option) => option.proyectoId}
       isOptionEqualToValue={(option, current) =>
         option.proyectoId === current.proyectoId
       }
       filterOptions={(items, state) =>
-        filterProyectoHierarchyOptions(items, state.inputValue)
+        filterProyectoHierarchyOptions(items, state.inputValue, fuse)
       }
       noOptionsText="Sin coincidencias"
       loadingText="Cargando servicios..."
       renderOption={(props, option) => {
-        const { key, ...optionProps } = props;
+        const { key: _key, ...optionProps } = props;
         return (
-          <Box component="li" key={key} {...optionProps} sx={{ py: 1.25 }}>
+          <Box
+            component="li"
+            key={option.proyectoId}
+            {...optionProps}
+            sx={{ py: 1.25 }}
+          >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {option.proyectoNombre}

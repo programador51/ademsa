@@ -104,27 +104,13 @@ export function MantenimientosProvider({
   const { tipos, agrupadores, proyectos } =
     useServiciosHierarchyData(condominioId);
 
+  const proyectoIds = useMemo(
+    () => proyectoIdsForCondominio(proyectos),
+    [proyectos]
+  );
+
   const tableKey = tipo === "preventivo" ? "mant-preventivos" : "mant-correctivos";
   const queryKey = tipo === "preventivo" ? "mant-preventivos" : "mant-correctivos";
-
-  const proyectoFilter = condominioId
-    ? buildCondominioFilter(condominioId, FIELDS.PROYECTOS.CONDOMINIO)
-    : undefined;
-
-  const { data: proyectosData } = useQuery({
-    queryKey: ["proyectos-condominio", condominioId],
-    queryFn: () =>
-      fetchTable<Proyecto>(
-        "proyectos",
-        proyectoFilter ? { filters: proyectoFilter } : undefined
-      ),
-    enabled: !!condominioId,
-  });
-
-  const proyectoIds = useMemo(
-    () => proyectoIdsForCondominio(proyectosData?.results ?? []),
-    [proyectosData]
-  );
 
   const { data, isLoading, error } = useQuery({
     queryKey: [queryKey, condominioId],

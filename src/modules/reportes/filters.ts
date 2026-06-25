@@ -1,5 +1,4 @@
 import { FIELDS, REPORTE_ESTATUS } from "@/lib/baserow/constants";
-import { rowBelongsToCondominio } from "@/lib/baserow/condominioFilters";
 import {
   ProyectoHierarchyFilters,
   defaultProyectoHierarchyFilters,
@@ -57,13 +56,8 @@ export function reportMatchesAdminFilters(
   filters: AdminReportesFilters,
   agrupadores: Agrupador[],
   proyectos: Proyecto[],
-  tipos: Tipo[],
-  condominioId: number
+  tipos: Tipo[]
 ): boolean {
-  if (!rowBelongsToCondominio(reporte[FIELDS.REPORTES.CONDOMINIO], condominioId)) {
-    return false;
-  }
-
   const hierarchy = resolveReporteHierarchy(
     reporte,
     agrupadores,
@@ -77,14 +71,8 @@ export function reportMatchesAdminFilters(
   if (filters.agrupadorId && hierarchy.agrupadorId !== Number(filters.agrupadorId)) {
     return false;
   }
-  if (filters.proyectoId) {
-    const proyecto = proyectos.find((row) => row.id === Number(filters.proyectoId));
-    const proyectoAgrupadorId = proyecto
-      ? getLinkIds(proyecto[FIELDS.PROYECTOS.AGRUPADOR])[0]
-      : null;
-    if (proyectoAgrupadorId !== hierarchy.agrupadorId) {
-      return false;
-    }
+  if (filters.proyectoId && hierarchy.proyectoId !== Number(filters.proyectoId)) {
+    return false;
   }
 
   if (filters.estatus) {

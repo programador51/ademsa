@@ -12,7 +12,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useServiciosHierarchyData } from "@/hooks/useServiciosHierarchyData";
 import {
-  buildCondominioFilter,
   createTableRow,
   deleteTableRow,
   fetchTable,
@@ -85,23 +84,9 @@ export function InversionesProvider({ children }: { children: ReactNode }) {
   const { tipos, agrupadores, proyectos } =
     useServiciosHierarchyData(condominioId);
 
-  const proyectoFilter = condominioId
-    ? buildCondominioFilter(condominioId, FIELDS.PROYECTOS.CONDOMINIO)
-    : undefined;
-
-  const { data: proyectosData } = useQuery({
-    queryKey: ["proyectos-condominio", condominioId],
-    queryFn: () =>
-      fetchTable<Proyecto>(
-        "proyectos",
-        proyectoFilter ? { filters: proyectoFilter } : undefined
-      ),
-    enabled: !!condominioId,
-  });
-
   const proyectoIds = useMemo(
-    () => proyectoIdsForCondominio(proyectosData?.results ?? []),
-    [proyectosData]
+    () => proyectoIdsForCondominio(proyectos),
+    [proyectos]
   );
 
   const { data, isLoading, error } = useQuery({

@@ -17,7 +17,6 @@ import {
   fetchTable,
   updateTableRow,
 } from "@/lib/api/data";
-import { rowBelongsToCondominio } from "@/lib/baserow/condominioFilters";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import {
   FIELDS,
@@ -102,18 +101,8 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
 
   const reportes = useMemo(() => {
     if (!condominioId) return [];
-    const all = (data?.results ?? []).filter((row) =>
-      rowBelongsToCondominio(row[FIELDS.REPORTES.CONDOMINIO], condominioId)
-    );
-    return all.filter((row) =>
-      reportMatchesAdminFilters(
-        row,
-        filters,
-        agrupadores,
-        proyectos,
-        tipos,
-        condominioId
-      )
+    return (data?.results ?? []).filter((row) =>
+      reportMatchesAdminFilters(row, filters, agrupadores, proyectos, tipos)
     );
   }, [data, condominioId, filters, agrupadores, proyectos, tipos]);
 

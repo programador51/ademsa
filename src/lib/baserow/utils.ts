@@ -36,7 +36,7 @@ function normalizeLinkRows(
 }
 
 export function getLinkIds(value: BaserowLinkValue): number[] {
-  return normalizeLinkRows(value).map((item) => item.id);
+  return normalizeLinkRows(value).map((item) => Number(item.id));
 }
 
 export function getLinkLabel(value: BaserowLinkValue): string {

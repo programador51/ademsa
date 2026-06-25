@@ -62,5 +62,5 @@ export function rowBelongsToCondominio(
   condominioId: number
 ): boolean {
   if (!condominioId) return false;
-  return getLinkIds(condominioLink).includes(condominioId);
+  return getLinkIds(condominioLink).includes(Number(condominioId));
 }
