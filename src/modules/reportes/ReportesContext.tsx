@@ -19,7 +19,7 @@ import {
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS } from "@/lib/baserow/constants";
 import { Reporte } from "@/lib/baserow/types";
-import { getLinkIds } from "@/lib/baserow/utils";
+import { getLinkIds, sortRowsByIdDesc } from "@/lib/baserow/utils";
 import {
   AdminReportesFilters,
   defaultAdminReportesFilters,
@@ -74,8 +74,8 @@ export function ReportesProvider({
   const reportes = useMemo(() => {
     const all = data?.results ?? [];
     if (!condominioId) return [];
-    return all
-      .filter((row) => {
+    return sortRowsByIdDesc(
+      all.filter((row) => {
         if (user?.id) {
           const reportadoPor = getLinkIds(row[FIELDS.REPORTES.REPORTADO_POR])[0];
           if (reportadoPor !== Number(user.id)) return false;
@@ -87,7 +87,8 @@ export function ReportesProvider({
           proyectos,
           tipos
         );
-      });
+      })
+    );
   }, [data, condominioId, user?.id, filters, agrupadores, proyectos, tipos]);
 
   const createMutation = useMutation({

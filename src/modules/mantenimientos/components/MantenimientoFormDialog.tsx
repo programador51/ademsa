@@ -148,8 +148,7 @@ export default function MantenimientoFormDialog() {
                 {formatDateTime(followUpParent[FIELDS.MANT_PREVENTIVOS.ULTIMO])}) y
                 siguiente programado (
                 {formatDateTime(followUpParent[FIELDS.MANT_PREVENTIVOS.SIGUIENTE])}
-                ). El campo &quot;Aplicado el&quot; podrá registrarse al editar el
-                registro.
+                ). El registro anterior quedará con &quot;Aplicado el&quot; en la fecha de hoy.
               </Typography>
               <FormDatePicker
                 name="siguiente"

@@ -22,6 +22,7 @@ import {
   rowBelongsToProyectos,
 } from "@/lib/baserow/condominioFilters";
 import { rowMatchesHierarchyFilters } from "@/lib/baserow/proyectoHierarchyUtils";
+import { sortRowsByIdDesc } from "@/lib/baserow/utils";
 import { showCreateSuccess } from "@/lib/ui/alerts";
 import { FIELDS } from "@/lib/baserow/constants";
 import {
@@ -63,17 +64,6 @@ const InversionesContext = createContext<InversionesContextValue | undefined>(
   undefined
 );
 
-function sortInversionesNewestFirst(rows: Inversion[]): Inversion[] {
-  return [...rows].sort((a, b) => {
-    const dateA = a[FIELDS.INVERSIONES.FECHA];
-    const dateB = b[FIELDS.INVERSIONES.FECHA];
-    if (dateA && dateB) return dateB.localeCompare(dateA);
-    if (dateA) return -1;
-    if (dateB) return 1;
-    return b.id - a.id;
-  });
-}
-
 export function InversionesProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { condominioId } = useApp();
@@ -114,7 +104,7 @@ export function InversionesProvider({ children }: { children: ReactNode }) {
       );
     });
 
-    return sortInversionesNewestFirst(filtered);
+    return sortRowsByIdDesc(filtered);
   }, [data, proyectoIds, filters, agrupadores, proyectos, tipos]);
 
   const saveMutation = useMutation({

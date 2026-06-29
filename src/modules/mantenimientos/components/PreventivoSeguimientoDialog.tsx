@@ -11,7 +11,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import HistoryIcon from "@mui/icons-material/History";
 import { useEffect, useState } from "react";
 import { resolveProyectoHierarchy } from "@/lib/baserow/proyectoHierarchyUtils";
 import { FIELDS } from "@/lib/baserow/constants";
@@ -22,7 +21,10 @@ import {
   Tipo,
 } from "@/lib/baserow/types";
 import { formatDateTime, formatFolio } from "@/lib/formatters";
-import { getPreventivoAnteriorId } from "../MantenimientosContext";
+import {
+  getPreventivoAnteriorId,
+  getPreventivoSiguienteId,
+} from "../MantenimientosContext";
 
 interface PreventivoSeguimientoDialogProps {
   open: boolean;
@@ -65,6 +67,12 @@ export default function PreventivoSeguimientoDialog({
   const anteriorId = row ? getPreventivoAnteriorId(row) : null;
   const anteriorRow =
     anteriorId != null ? preventivosById.get(anteriorId) : undefined;
+  const siguienteId =
+    viewingId != null
+      ? getPreventivoSiguienteId(viewingId, preventivosById)
+      : null;
+  const siguienteRow =
+    siguienteId != null ? preventivosById.get(siguienteId) : undefined;
 
   const hierarchy = row
     ? resolveProyectoHierarchy(
@@ -122,18 +130,27 @@ export default function PreventivoSeguimientoDialog({
                 El mantenimiento anterior vinculado no está disponible.
               </Alert>
             )}
+            {siguienteId != null && !siguienteRow && (
+              <Alert severity="warning">
+                El mantenimiento siguiente vinculado no está disponible.
+              </Alert>
+            )}
           </Stack>
         )}
       </DialogContent>
       <DialogActions sx={{ flexWrap: "wrap", gap: 1, px: 3, pb: 2 }}>
-        {anteriorRow && (
-          <Button
-            startIcon={<HistoryIcon />}
-            onClick={() => setViewingId(anteriorRow.id)}
-          >
-            Ver mantenimiento anterior
-          </Button>
-        )}
+        <Button
+          disabled={!anteriorRow}
+          onClick={() => anteriorRow && setViewingId(anteriorRow.id)}
+        >
+          Anterior
+        </Button>
+        <Button
+          disabled={!siguienteRow}
+          onClick={() => siguienteRow && setViewingId(siguienteRow.id)}
+        >
+          Siguiente
+        </Button>
         <Box sx={{ flex: 1 }} />
         <Button onClick={onClose}>Cerrar</Button>
       </DialogActions>

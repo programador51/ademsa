@@ -65,3 +65,7 @@ export function buildFieldFilter(
 export function buildCondominioFilter(condominioId: number, field: string) {
   return buildFieldFilter(field, "link_row_has", condominioId);
 }
+
+export function sortRowsByIdDesc<T extends { id: number }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => b.id - a.id);
+}

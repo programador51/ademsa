@@ -23,7 +23,7 @@ import {
   REPORTE_ESTATUS,
 } from "@/lib/baserow/constants";
 import { Agrupador, MantenimientoCorrectivo, Proyecto, Reporte, Tipo } from "@/lib/baserow/types";
-import { getLinkIds, getSelectId } from "@/lib/baserow/utils";
+import { getLinkIds, getSelectId, sortRowsByIdDesc } from "@/lib/baserow/utils";
 import {
   AdminReportesFilters,
   defaultAdminReportesFilters,
@@ -102,8 +102,10 @@ export function AdminReportesProvider({ children }: { children: ReactNode }) {
 
   const reportes = useMemo(() => {
     if (!condominioId) return [];
-    return (data?.results ?? []).filter((row) =>
-      reportMatchesAdminFilters(row, filters, agrupadores, proyectos, tipos)
+    return sortRowsByIdDesc(
+      (data?.results ?? []).filter((row) =>
+        reportMatchesAdminFilters(row, filters, agrupadores, proyectos, tipos)
+      )
     );
   }, [data, condominioId, filters, agrupadores, proyectos, tipos]);
 

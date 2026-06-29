@@ -36,7 +36,7 @@ import {
   Reporte,
   Tipo,
 } from "@/lib/baserow/types";
-import { getLinkIds } from "@/lib/baserow/utils";
+import { getLinkIds, sortRowsByIdDesc } from "@/lib/baserow/utils";
 import { formatFolio } from "@/lib/formatters";
 import {
   defaultMantCorrectivoFilters,
@@ -161,43 +161,47 @@ export function MantenimientosProvider({
       const base = (all as MantenimientoPreventivo[]).filter((row) =>
         rowBelongsToProyectos(row[FIELDS.MANT_PREVENTIVOS.PROYECTO], proyectoIds)
       );
-      return base.filter((row) => {
-        if (
-          !matchesFolioSearch(row[FIELDS.MANT_PREVENTIVOS.FOLIO], hierarchyFilters.folio)
-        ) {
-          return false;
-        }
-        return rowMatchesHierarchyFilters(
-          row[FIELDS.MANT_PREVENTIVOS.PROYECTO],
-          hierarchyFilters,
-          agrupadores,
-          proyectos,
-          tipos
-        );
-      });
+      return sortRowsByIdDesc(
+        base.filter((row) => {
+          if (
+            !matchesFolioSearch(row[FIELDS.MANT_PREVENTIVOS.FOLIO], hierarchyFilters.folio)
+          ) {
+            return false;
+          }
+          return rowMatchesHierarchyFilters(
+            row[FIELDS.MANT_PREVENTIVOS.PROYECTO],
+            hierarchyFilters,
+            agrupadores,
+            proyectos,
+            tipos
+          );
+        })
+      );
     }
-    return (all as MantenimientoCorrectivo[])
-      .filter((row) =>
-        rowBelongsToProyectos(row[FIELDS.MANT_CORRECTIVOS.PROYECTO], proyectoIds)
-      )
-      .filter((row) => {
-        const estatus = row[FIELDS.MANT_CORRECTIVOS.ESTATUS] ?? "";
-        if (correctivoFilters.estatus && estatus !== correctivoFilters.estatus) {
-          return false;
-        }
-        if (
-          !matchesFolioSearch(row[FIELDS.MANT_CORRECTIVOS.FOLIO], correctivoFilters.folio)
-        ) {
-          return false;
-        }
-        return rowMatchesHierarchyFilters(
-          row[FIELDS.MANT_CORRECTIVOS.PROYECTO],
-          correctivoFilters,
-          agrupadores,
-          proyectos,
-          tipos
-        );
-      });
+    return sortRowsByIdDesc(
+      (all as MantenimientoCorrectivo[])
+        .filter((row) =>
+          rowBelongsToProyectos(row[FIELDS.MANT_CORRECTIVOS.PROYECTO], proyectoIds)
+        )
+        .filter((row) => {
+          const estatus = row[FIELDS.MANT_CORRECTIVOS.ESTATUS] ?? "";
+          if (correctivoFilters.estatus && estatus !== correctivoFilters.estatus) {
+            return false;
+          }
+          if (
+            !matchesFolioSearch(row[FIELDS.MANT_CORRECTIVOS.FOLIO], correctivoFilters.folio)
+          ) {
+            return false;
+          }
+          return rowMatchesHierarchyFilters(
+            row[FIELDS.MANT_CORRECTIVOS.PROYECTO],
+            correctivoFilters,
+            agrupadores,
+            proyectos,
+            tipos
+          );
+        })
+    );
   }, [
     data,
     proyectoIds,
@@ -247,7 +251,12 @@ export function MantenimientosProvider({
 
       const fechaAplicada =
         parent[FIELDS.MANT_PREVENTIVOS.SIGUIENTE]?.slice(0, 10) ?? null;
+      const aplicadoEl = new Date().toISOString().slice(0, 10);
       const proyectoId = getLinkIds(parent[FIELDS.MANT_PREVENTIVOS.PROYECTO])[0];
+
+      await updateTableRow("mant-preventivos", parent.id, {
+        [FIELDS.MANT_PREVENTIVOS.APLICADO_EL]: aplicadoEl,
+      });
 
       await createTableRow("mant-preventivos", {
         [FIELDS.MANT_PREVENTIVOS.ULTIMO]: fechaAplicada,
@@ -385,7 +394,9 @@ export function MantenimientosProvider({
       deleteRow: (row: MantenimientoPreventivo | MantenimientoCorrectivo) =>
         deleteMutation.mutateAsync(row).then(() => undefined),
       isSaving:
-        savePreventivoMutation.isPending || saveCorrectivoMutation.isPending,
+        savePreventivoMutation.isPending ||
+        savePreventivoFollowUpMutation.isPending ||
+        saveCorrectivoMutation.isPending,
       isClosingCorrectivo: closeCorrectivoMutation.isPending,
     }),
     [
@@ -439,6 +450,16 @@ export function getPreventivoAnteriorId(
 
 export function hasPreventivoAnterior(row: MantenimientoPreventivo): boolean {
   return getPreventivoAnteriorId(row) != null;
+}
+
+export function getPreventivoSiguienteId(
+  rowId: number,
+  preventivosById: Map<number, MantenimientoPreventivo>
+): number | null {
+  for (const row of preventivosById.values()) {
+    if (getPreventivoAnteriorId(row) === rowId) return row.id;
+  }
+  return null;
 }
 
 export function getPreventivoEditValues(
