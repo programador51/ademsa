@@ -34,7 +34,9 @@ export default function InversionFormDialog() {
 
   const { control, handleSubmit, reset, watch, setValue } =
     useForm<InversionFormValues>({
-      resolver: yupResolver(inversionFormSchema) as Resolver<InversionFormValues>,
+      resolver: yupResolver(
+        inversionFormSchema,
+      ) as Resolver<InversionFormValues>,
       defaultValues: defaultInversionFormValues,
     });
 
@@ -50,7 +52,7 @@ export default function InversionFormDialog() {
         const hierarchy = getHierarchyFromProyecto(
           base.proyectoId,
           agrupadores,
-          proyectos
+          proyectos,
         );
         reset({ ...base, ...hierarchy });
       } else {
@@ -63,22 +65,32 @@ export default function InversionFormDialog() {
 
   return (
     <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="sm">
-      <DialogTitle>{editingId ? "Editar inversión" : "Nueva inversión"}</DialogTitle>
+      <DialogTitle>
+        {editingId ? "Editar inversión" : "Nueva inversión"}
+      </DialogTitle>
       <form onSubmit={handleSubmit((v) => saveInversion(v))}>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormDatePicker name="fecha" control={control} label="Fecha" />
-            <FormMoneyField name="presupuesto" control={control} label="Presupuesto" />
-            <FormMoneyField name="ingreso" control={control} label="Ingreso recibido" />
-            <FormDatePicker
-              name="concluido"
-              control={control}
-              label="Concluido (fecha estimada)"
-            />
             <ProyectoHierarchyFields
               control={control}
               watch={watch}
               setValue={setValue}
+            />
+            <FormDatePicker name="fecha" control={control} label="Fecha" />
+            <FormMoneyField
+              name="presupuesto"
+              control={control}
+              label="Presupuesto"
+            />
+            <FormMoneyField
+              name="ingreso"
+              control={control}
+              label="Ingreso recibido"
+            />
+            <FormDatePicker
+              name="concluido"
+              control={control}
+              label="Concluido (fecha estimada)"
             />
           </Stack>
         </DialogContent>

@@ -7,6 +7,7 @@ import { useApp } from "@/contexts/AppContext";
 import { ROLES } from "@/lib/baserow/constants";
 import { ReportesProvider } from "@/modules/reportes/ReportesContext";
 import ReportesView from "@/modules/reportes/components/ReportesView";
+import { defaultResidenteReportesFilters } from "@/modules/reportes/filters";
 
 function ReportesPageContent() {
   const searchParams = useSearchParams();
@@ -16,7 +17,7 @@ function ReportesPageContent() {
       : null;
 
   return (
-    <ReportesProvider>
+    <ReportesProvider initialFilters={defaultResidenteReportesFilters}>
       <ReportesView quickCreateTipoId={quickCreateTipoId} />
     </ReportesProvider>
   );

@@ -28,7 +28,7 @@ export default function ReportesFiltersBar({
   proyectos,
   useTicketLabels = false,
 }: ReportesFiltersBarProps) {
-  const fechaLabel = useTicketLabels ? "Fecha ticket" : "Fecha reporte";
+  const fechaLabel = "Fecha ticket";
 
   return (
     <ProyectoHierarchyFiltersBar
@@ -40,7 +40,7 @@ export default function ReportesFiltersBar({
       extraFilters={
         <Stack spacing={1.5}>
           <TextField
-            label={useTicketLabels ? "ID / Folio del ticket" : "ID / Folio del reporte"}
+            label={'Folio del ticket'}
             value={filters.registroId}
             onChange={(e) =>
               onChange({

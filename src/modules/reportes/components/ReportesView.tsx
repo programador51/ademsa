@@ -54,6 +54,7 @@ export default function ReportesView({
     isCreating,
   } = useReportes();
   const [files, setFiles] = useState<File[]>([]);
+  const [hierarchyLocked, setHierarchyLocked] = useState(false);
   const quickCreateHandled = useRef(false);
 
   const { control, handleSubmit, reset, watch, setValue } =
@@ -81,7 +82,7 @@ export default function ReportesView({
     const { agrupadorId, proyectoId } = getDefaultHierarchyForTipo(
       quickCreateTipoId,
       agrupadores,
-      proyectos
+      proyectos,
     );
     if (!agrupadorId || !proyectoId) {
       router.replace("/residente/reportes");
@@ -89,6 +90,7 @@ export default function ReportesView({
     }
 
     quickCreateHandled.current = true;
+    setHierarchyLocked(true);
     reset({
       descripcion: "",
       tipoId: quickCreateTipoId,
@@ -109,13 +111,21 @@ export default function ReportesView({
   ]);
 
   const handleClose = () => {
+    setHierarchyLocked(false);
     reset(defaultReporteFormValues);
     setFiles([]);
     closeDialog();
   };
 
+  const handleOpenCreate = () => {
+    setHierarchyLocked(false);
+    reset(defaultReporteFormValues);
+    openDialog();
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     await createReporte({ ...values, files });
+    setHierarchyLocked(false);
     reset(defaultReporteFormValues);
     setFiles([]);
   });
@@ -164,7 +174,8 @@ export default function ReportesView({
             id: "tipo",
             label: "Nivel 1 · Tipo",
             render: (row) =>
-              resolveReporteHierarchy(row, agrupadores, proyectos, tipos).tipoNombre,
+              resolveReporteHierarchy(row, agrupadores, proyectos, tipos)
+                .tipoNombre,
           },
           {
             id: "agrupador",
@@ -205,7 +216,7 @@ export default function ReportesView({
           },
         ]}
         headerAction={
-          <Button size="small" startIcon={<AddIcon />} onClick={openDialog}>
+          <Button size="small" startIcon={<AddIcon />} onClick={handleOpenCreate}>
             Nuevo
           </Button>
         }
@@ -215,6 +226,13 @@ export default function ReportesView({
         <DialogTitle>Nuevo ticket</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            <ProyectoHierarchyFields
+              control={control}
+              watch={watch}
+              setValue={setValue}
+              required
+              disabled={hierarchyLocked}
+            />
             <FormTextField
               name="descripcion"
               control={control}
@@ -223,12 +241,7 @@ export default function ReportesView({
               minRows={4}
               required
             />
-            <ProyectoHierarchyFields
-              control={control}
-              watch={watch}
-              setValue={setValue}
-              required
-            />
+
             <FilePondUpload files={files} onChange={setFiles} />
           </Stack>
         </DialogContent>

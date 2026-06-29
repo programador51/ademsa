@@ -91,7 +91,7 @@ export default function AdminReportesView() {
   return (
     <Stack spacing={2}>
       <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Reportes de residentes
+        Tickets de residentes
       </Typography>
 
       <ReportesFiltersBar
@@ -253,7 +253,7 @@ export default function AdminReportesView() {
                       onClick={() => void handleToggleStatus(reporte)}
                       disabled={isUpdating}
                     >
-                      {cerrado ? "Reabrir reporte" : "Cerrar reporte"}
+                      {cerrado ? "Reabrir ticket" : "Cerrar ticket"}
                     </Button>
                     {!cerrado && !tieneMantenimiento && !hierarchy.tipoAccesoRapido && (
                       <Button

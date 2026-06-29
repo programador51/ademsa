@@ -127,7 +127,7 @@ export default function ResidenteDashboardPage() {
           return (
             <Grid key={tipo.id} size={{ xs: 6 }}>
               <DashboardTile
-                title={nombre}
+                title={`Tickets ${nombre}`}
                 color={color}
                 icon={BoltIcon}
                 onClick={() =>

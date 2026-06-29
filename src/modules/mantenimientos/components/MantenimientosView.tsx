@@ -17,6 +17,7 @@ import {
 } from "@/lib/baserow/types";
 import {
   getCorrectivoDisplayDescription,
+  getCorrectivoReporteFolios,
   hasPreventivoAnterior,
   isCorrectivoCerrado,
   useMantenimientos,
@@ -134,7 +135,7 @@ export default function MantenimientosView() {
                 startIcon={<AddIcon />}
                 onClick={() => openFollowUp(row)}
               >
-                Agregar
+                Siguiente mantenimiento
               </Button>
             </Stack>
           )}
@@ -285,6 +286,11 @@ export default function MantenimientosView() {
             label: "Folio",
             primary: true,
             render: (row) => formatFolio(row[FIELDS.MANT_CORRECTIVOS.FOLIO]),
+          },
+          {
+            id: FIELDS.MANT_CORRECTIVOS.REPORTES,
+            label: "Nº ticket",
+            render: (row) => getCorrectivoReporteFolios(row),
           },
           {
             id: FIELDS.MANT_CORRECTIVOS.DESCRIPCION,

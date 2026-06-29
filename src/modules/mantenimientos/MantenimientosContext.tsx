@@ -37,6 +37,7 @@ import {
   Tipo,
 } from "@/lib/baserow/types";
 import { getLinkIds } from "@/lib/baserow/utils";
+import { formatFolio } from "@/lib/formatters";
 import {
   defaultMantCorrectivoFilters,
   defaultMantPreventivoFilters,
@@ -468,6 +469,12 @@ export function getCorrectivoEditValues(
     agrupadorId: null,
     proyectoId: getLinkIds(row[FIELDS.MANT_CORRECTIVOS.PROYECTO])[0] ?? null,
   };
+}
+
+export function getCorrectivoReporteFolios(row: MantenimientoCorrectivo): string {
+  const reporteIds = getLinkIds(row[FIELDS.MANT_CORRECTIVOS.REPORTES]);
+  if (!reporteIds.length) return "—";
+  return reporteIds.map((id) => formatFolio(id)).join(", ");
 }
 
 export function getCorrectivoDisplayDescription(

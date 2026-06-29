@@ -46,11 +46,17 @@ const ReportesContext = createContext<ReportesContextValue | undefined>(
   undefined
 );
 
-export function ReportesProvider({ children }: { children: ReactNode }) {
+export function ReportesProvider({
+  children,
+  initialFilters = defaultAdminReportesFilters,
+}: {
+  children: ReactNode;
+  initialFilters?: AdminReportesFilters;
+}) {
   const queryClient = useQueryClient();
   const { condominioId, user } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [filters, setFilters] = useState(defaultAdminReportesFilters);
+  const [filters, setFilters] = useState(initialFilters);
 
   const apiFilters = condominioId
     ? buildCondominioFilter(condominioId, FIELDS.REPORTES.CONDOMINIO)

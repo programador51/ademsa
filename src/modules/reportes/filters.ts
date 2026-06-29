@@ -24,6 +24,11 @@ export const defaultAdminReportesFilters: AdminReportesFilters = {
   registroId: "",
 };
 
+export const defaultResidenteReportesFilters: AdminReportesFilters = {
+  ...defaultAdminReportesFilters,
+  estatus: REPORTE_ESTATUS.ABIERTA,
+};
+
 export function resolveReporteHierarchy(
   reporte: Reporte,
   agrupadores: Agrupador[],
